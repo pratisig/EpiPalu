@@ -29,7 +29,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, R"²"_score
 from branca.colormap import linear
 from PIL import Image
 from io import BytesIO
@@ -1538,7 +1538,7 @@ with tab3:
                     
                     # Validation croisée
                     tscv = TimeSeriesSplit(n_splits=5)
-                    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring='r2', n_jobs=-1)
+                    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring='R"²"', n_jobs=-1)
                     cv_mae = -cross_val_score(model, X, y, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
                     progress_bar.progress(85)
                     
@@ -1547,7 +1547,7 @@ with tab3:
                     df_model["predicted_cases"] = model.predict(X).clip(0).round().astype(int)
                     mae = mean_absolute_error(y, df_model["predicted_cases"])
                     rmse = np.sqrt(mean_squared_error(y, df_model["predicted_cases"]))
-                    r2 = r2_score(y, df_model["predicted_cases"])
+                    R"²" = R"²"_score(y, df_model["predicted_cases"])
                     progress_bar.progress(90)
                     
                     # Prédictions futures
@@ -1622,7 +1622,7 @@ with tab3:
                     # Sauvegarder
                     st.session_state.model_results = {
                         'df_model': df_model, 'df_future': df_future,
-                        'metrics': {'mae': mae, 'rmse': rmse, 'r2': r2, 'cv_r2_mean': cv_scores.mean(), 'cv_r2_std': cv_scores.std()},
+                        'metrics': {'mae': mae, 'rmse': rmse, 'R"²"': R"²", 'cv_R"²"_mean': cv_scores.mean(), 'cv_R"²"_std': cv_scores.std()},
                         'pca_info': pca_info, 'feature_cols': feature_cols
                     }
                     
@@ -1642,17 +1642,17 @@ with tab3:
                 col1, col2, col3, col4 = st.columns(4)
                 col1.metric("📉 MAE", f"{metrics['mae']:.2f}")
                 col2.metric("📊 RMSE", f"{metrics['rmse']:.2f}")
-                col3.metric("🎯 R²", f"{metrics['r2']:.3f}")
-                col4.metric("✅ R² CV", f"{metrics['cv_r2_mean']:.3f}")
+                col3.metric("🎯 R"²"", f"{metrics['R"²"']:.3f}")
+                col4.metric("✅ R"²" CV", f"{metrics['cv_R"²"_mean']:.3f}")
                 
                 # Interprétation
-                r2, cv_r2 = metrics['r2'], metrics['cv_r2_mean']
-                if r2 > 0.85 and cv_r2 > 0.80:
-                    st.success(f"✅ **Excellent** : R²={r2:.3f}, CV={cv_r2:.3f} - Fiable pour décisions stratégiques")
-                elif r2 > 0.70 and cv_r2 > 0.65:
-                    st.info(f"🟡 **Bon** : R²={r2:.3f}, CV={cv_r2:.3f} - OK pour alertes précoces")
+                R"²", cv_R"²" = metrics['R"²"'], metrics['cv_R"²"_mean']
+                if R"²" > 0.85 and cv_R"²" > 0.80:
+                    st.success(f"✅ **Excellent** : R"²"={R"²":.3f}, CV={cv_R"²":.3f} - Fiable pour décisions stratégiques")
+                elif R"²" > 0.70 and cv_R"²" > 0.65:
+                    st.info(f"🟡 **Bon** : R"²"={R"²":.3f}, CV={cv_R"²":.3f} - OK pour alertes précoces")
                 else:
-                    st.warning(f"⚠️ **Moyen** : R²={r2:.3f}, CV={cv_r2:.3f} - Activer climat / vérifier données")
+                    st.warning(f"⚠️ **Moyen** : R"²"={R"²":.3f}, CV={cv_R"²":.3f} - Activer climat / vérifier données")
                 
                 # Prédictions
                 st.markdown("### 🔮 Prédictions")
@@ -2224,7 +2224,7 @@ with tab6:
             </ul>
             <p><b>✅ Avantages :</b></p>
             <ul>
-                <li>Généralement <b>le plus précis</b> (meilleur R²)</li>
+                <li>Généralement <b>le plus précis</b> (meilleur R"²")</li>
                 <li>Excellent pour séries temporelles</li>
                 <li>Capture interactions complexes</li>
             </ul>
@@ -2403,16 +2403,16 @@ with tab6:
             ### 📊 Comprendre les Métriques de Performance
             
             <div class="param-card">
-            <h4>🎯 R² (Coefficient de Détermination)</h4>
+            <h4>🎯 R"²" (Coefficient de Détermination)</h4>
             <p><b>Définition simple :</b> "Quelle % des variations est expliquée par le modèle ?"</p>
             <p><b>Formule intuitive :</b></p>
             <ul>
-                <li>R² = 1 - (Erreurs du modèle / Variabilité totale des données)</li>
+                <li>R"²" = 1 - (Erreurs du modèle / Variabilité totale des données)</li>
             </ul>
             <p><b>Interprétation :</b></p>
             <table style="width:100%; border-collapse:collapse; margin-top:1rem;">
                 <tr style="background:#f5f5f5;">
-                    <th style="padding:0.5rem; border:1px solid #ddd;">R²</th>
+                    <th style="padding:0.5rem; border:1px solid #ddd;">R"²"</th>
                     <th style="padding:0.5rem; border:1px solid #ddd;">Signification</th>
                     <th style="padding:0.5rem; border:1px solid #ddd;">Action</th>
                 </tr>
@@ -2439,7 +2439,7 @@ with tab6:
             </table>
             <p><b>Exemple concret :</b></p>
             <ul>
-                <li>R² = 0.82 → "Mon modèle explique 82% des variations de cas"</li>
+                <li>R"²" = 0.82 → "Mon modèle explique 82% des variations de cas"</li>
                 <li>Les 18% restants = autres facteurs (interventions, erreurs mesure...)</li>
             </ul>
             </div>
@@ -2485,8 +2485,8 @@ with tab6:
             </div>
             
             <div class="param-card">
-            <h4>✅ R² Validation Croisée (le plus important !)</h4>
-            <p><b>Problème :</b> Un modèle peut avoir R²=0.95 sur données d'entraînement mais R²=0.60 sur nouvelles données</p>
+            <h4>✅ R"²" Validation Croisée (le plus important !)</h4>
+            <p><b>Problème :</b> Un modèle peut avoir R"²"=0.95 sur données d'entraînement mais R"²"=0.60 sur nouvelles données</p>
             <p><b>Solution :</b> Validation croisée temporelle</p>
             <ol>
                 <li><b>Split 1</b> : Entraîne sur semaines 1-40, teste sur 41-52</li>
@@ -2494,11 +2494,11 @@ with tab6:
                 <li>...</li>
                 <li><b>Moyenne des performances</b> → Fiabilité réelle</li>
             </ol>
-            <p><b>👉 REGARDEZ EN PRIORITÉ LE R² CV, PAS LE R² SIMPLE !</b></p>
+            <p><b>👉 REGARDEZ EN PRIORITÉ LE R"²" CV, PAS LE R"²" SIMPLE !</b></p>
             <ul>
-                <li>R² CV > 0.80 → Excellent</li>
-                <li>R² CV > 0.65 → Bon</li>
-                <li>R² CV < 0.50 → Problème (sur-apprentissage)</li>
+                <li>R"²" CV > 0.80 → Excellent</li>
+                <li>R"²" CV > 0.65 → Bon</li>
+                <li>R"²" CV < 0.50 → Problème (sur-apprentissage)</li>
             </ul>
             </div>
             """, unsafe_allow_html=True)
@@ -2511,12 +2511,12 @@ with tab6:
         
         st.markdown("""
         <div class="param-card">
-        <h3>🎯 1. Regardez d'abord le R² CV</h3>
-        <p><b>C'est THE métrique à surveiller</b> (plus fiable que le R² simple)</p>
+        <h3>🎯 1. Regardez d'abord le R"²" CV</h3>
+        <p><b>C'est THE métrique à surveiller</b> (plus fiable que le R"²" simple)</p>
         <ul>
-            <li>R² CV > 0.80 + R² > 0.85 → <b>🟢 Excellent, utilisez en confiance</b></li>
-            <li>R² CV 0.65-0.80 + R² 0.70-0.85 → <b>🟡 Bon, vérifiez avec terrain</b></li>
-            <li>R² CV < 0.65 ou (R² - R² CV) > 0.15 → <b>🔴 Sur-apprentissage, améliorez</b></li>
+            <li>R"²" CV > 0.80 + R"²" > 0.85 → <b>🟢 Excellent, utilisez en confiance</b></li>
+            <li>R"²" CV 0.65-0.80 + R"²" 0.70-0.85 → <b>🟡 Bon, vérifiez avec terrain</b></li>
+            <li>R"²" CV < 0.65 ou (R"²" - R"²" CV) > 0.15 → <b>🔴 Sur-apprentissage, améliorez</b></li>
         </ul>
         </div>
         
@@ -2592,8 +2592,8 @@ with tab6:
         <div class="param-card">
         <h3>⚠️ 5. Signes d'Alerte (Quand NE PAS Faire Confiance)</h3>
         <ul>
-            <li>🚨 <b>R² CV < 0.50</b> → Modèle peu fiable, ne l'utilisez pas</li>
-            <li>🚨 <b>R² - R² CV > 0.20</b> → Sur-apprentissage sévère</li>
+            <li>🚨 <b>R"²" CV < 0.50</b> → Modèle peu fiable, ne l'utilisez pas</li>
+            <li>🚨 <b>R"²" - R"²" CV > 0.20</b> → Sur-apprentissage sévère</li>
             <li>🚨 <b>MAE > 30% du nombre moyen de cas</b> → Erreurs trop grandes</li>
             <li>🚨 <b>Prédictions aberrantes</b> (ex: 500 cas prévus vs 50 historique) → Vérifiez données</li>
         </ul>
@@ -2661,8 +2661,8 @@ with tab6:
             <h4> Modélisation</h4>
             <ul>
                 <li> Horizon trop long (>8 sem) sans expertise</li>
-                <li> Ignorer R² CV (regarder que R² simple)</li>
-                <li> Croire prédictions si R² CV < 0.50</li>
+                <li> Ignorer R"²" CV (regarder que R"²" simple)</li>
+                <li> Croire prédictions si R"²" CV < 0.50</li>
                 <li> Ne pas mettre à jour régulièrement</li>
             </ul>
             
@@ -2728,7 +2728,7 @@ with tab6:
             
             <h5>✅ Indicateurs de Succès</h5>
             <ul>
-                <li>R² CV > 0.75 pour prédictions nationales</li>
+                <li>R"²" CV > 0.75 pour prédictions nationales</li>
                 <li>Réduction ruptures stock de 30% après 6 mois</li>
                 <li>Anticipation pics épidémiques 3-4 semaines avant</li>
             </ul>
@@ -2760,7 +2760,7 @@ with tab6:
             
             <h5>✅ Indicateurs de Succès</h5>
             <ul>
-                <li>R² CV > 0.80 pour prédictions 1-2 semaines</li>
+                <li>R"²" CV > 0.80 pour prédictions 1-2 semaines</li>
                 <li>80%+ des alertes confirmées par terrain</li>
                 <li>Détection précoce de 70%+ des pics</li>
             </ul>
@@ -2898,6 +2898,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
