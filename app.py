@@ -1642,8 +1642,8 @@ with tab3:
                 col1, col2, col3, col4 = st.columns(4)
                 col1.metric("📉 MAE", f"{metrics['mae']:.2f}")
                 col2.metric("📊 RMSE", f"{metrics['rmse']:.2f}")
-                col3.metric("🎯 R"²"", f"{metrics['R"²"']:.3f}")
-                col4.metric("✅ R"²" CV", f"{metrics['cv_R"²"_mean']:.3f}")
+                col3.metric("🎯 R2, f"{metrics['R"²"']:.3f}")
+                col4.metric("✅ R2 CV", f"{metrics['cv_R"²"_mean']:.3f}")
                 
                 # Interprétation
                 R"²", cv_R"²" = metrics['R"²"'], metrics['cv_R"²"_mean']
@@ -2764,6 +2764,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
