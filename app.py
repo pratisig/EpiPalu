@@ -2647,7 +2647,7 @@ with tab6:
             """, unsafe_allow_html=True)
         
         with col2:
-            st.markdown(""")
+            st.markdown("""
             <div class="param-card">
             <h3>⚠️ Erreurs Fréquentes à Éviter</h3>
             <h4>🔴 Données</h4>
@@ -2657,7 +2657,7 @@ with tab6:
                 <li>❌ Dates/années incohérentes</li>
                 <li>❌ Valeurs négatives dans "cases"</li>
             </ul>
-            
+               """, unsafe_allow_html=True)
             <h4>🔴 Modélisation</h4>
             <ul>
                 <li>❌ Horizon trop long (>8 sem) sans expertise</li>
@@ -2898,6 +2898,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
