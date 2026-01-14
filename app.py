@@ -2660,7 +2660,7 @@ with tab6:
                """, unsafe_allow_html=True)
             <h4> Modélisation</h4>
             <ul>
-                <li>❌ Horizon trop long (>8 sem) sans expertise</li>
+                <li> Horizon trop long (>8 sem) sans expertise</li>
                 <li>❌ Ignorer R² CV (regarder que R² simple)</li>
                 <li>❌ Croire prédictions si R² CV < 0.50</li>
                 <li>❌ Ne pas mettre à jour régulièrement</li>
@@ -2898,6 +2898,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
