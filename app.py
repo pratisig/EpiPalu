@@ -1646,13 +1646,13 @@ with tab3:
                 col4.metric("✅ R2 CV", f"{metrics['cv_R"²"_mean']:.3f}")
                 
                 # Interprétation
-                R"²", cv_R"²" = metrics[R2], metrics['cv_R"²"_mean']
-                if R"²" > 0.85 and cv_R"²" > 0.80:
-                    st.success(f"✅ **Excellent** : R"²"={R"²":.3f}, CV={cv_R"²":.3f} - Fiable pour décisions stratégiques")
-                elif R"²" > 0.70 and cv_R"²" > 0.65:
-                    st.info(f"🟡 **Bon** : R"²"={R"²":.3f}, CV={cv_R"²":.3f} - OK pour alertes précoces")
+                R"²", cv_R2= metrics[R2], metrics['cv_R"²"_mean']
+                if R"²" > 0.85 and cv_R2> 0.80:
+                    st.success(f"✅ **Excellent** : R2={R2:.3f}, CV={cv_R2:.3f} - Fiable pour décisions stratégiques")
+                elif R"²" > 0.70 and cv_R2> 0.65:
+                    st.info(f"🟡 **Bon** : R"²"={R2:.3f}, CV={cv_R2:.3f} - OK pour alertes précoces")
                 else:
-                    st.warning(f"⚠️ **Moyen** : R"²"={R"²":.3f}, CV={cv_R"²":.3f} - Activer climat / vérifier données")
+                    st.warning(f"⚠️ **Moyen** : R2={R2:.3f}, CV={cv_R2:.3f} - Activer climat / vérifier données")
                 
                 # Prédictions
                 st.markdown("### 🔮 Prédictions")
@@ -2764,6 +2764,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
