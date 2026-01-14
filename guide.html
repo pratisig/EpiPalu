@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>EpiPalu-Predict – Guide utilisateur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #b30000;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+        }
+        ul {
+            margin-left: 20px;
+        }
+        .schema {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 6px solid #ffc107;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        footer {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 40px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🦟 EpiPalu-Predict</h1>
+<p><strong>Application de surveillance et de prédiction du paludisme à l’échelle locale</strong></p>
+
+<div class="box">
+<h2>🎯 Objectif de l’application</h2>
+<p>
+EpiPalu-Predict est une application interactive destinée à :
+</p>
+<ul>
+    <li>Analyser l’évolution spatio-temporelle des cas de paludisme</li>
+    <li>Visualiser les zones à risque par aire de santé</li>
+    <li>Anticiper les tendances futures (prévision à court terme)</li>
+    <li>Aider les décideurs à orienter les actions de prévention</li>
+</ul>
+</div>
+
+<div class="box">
+<h2>🧭 À qui s’adresse l’application ?</h2>
+<ul>
+    <li>Responsables de programmes de lutte contre le paludisme</li>
+    <li>ONG et partenaires humanitaires</li>
+    <li>Services de santé</li>
+    <li>Analystes MEAL / SIG / Épidémiologie</li>
+</ul>
+</div>
+
+<div class="box">
+<h2>📊 Données utilisées</h2>
+<ul>
+    <li><strong>Données épidémiologiques</strong> :
+        <ul>
+            <li>Nombre de cas par semaine</li>
+            <li>Nombre de décès par semaine</li>
+            <li>Aire de santé</li>
+        </ul>
+    </li>
+    <li><strong>Données spatiales</strong> :
+        <ul>
+            <li>Limites des aires de santé (GeoJSON / SHP)</li>
+            <li>Rasters environnementaux (inondation, température, pluie, humidité)</li>
+            <li>Cours d’eau (optionnel)</li>
+        </ul>
+    </li>
+</ul>
+</div>
+
+<div class="box">
+<h2>🗺️ Fonctionnement général</h2>
+
+<div class="schema">
+[Données brutes]
+      ↓
+[Nettoyage & agrégation]
+      ↓
+[Analyse spatiale]
+      ↓
+[Cartographie interactive]
+      ↓
+[Modélisation prédictive]
+      ↓
+[Aide à la décision]
+</div>
+</div>
+
+<div class="box">
+<h2>🧩 Description des onglets</h2>
+
+<h3>🔹 Onglet 1 – Dashboard</h3>
+<ul>
+    <li>Courbes d’évolution des cas par semaine</li>
+    <li>Comparaison entre aires de santé</li>
+    <li>Graphiques interactifs (survol, filtres)</li>
+</ul>
+
+<h3>🔹 Onglet 2 – Cartographie</h3>
+<ul>
+    <li>Carte interactive des aires de santé</li>
+    <li>Polygones transparents + contours</li>
+    <li>Cercles proportionnels au nombre de cas</li>
+    <li>Affichage des rasters environnementaux</li>
+    <li>Outils de zoom, dessin, mesure</li>
+</ul>
+
+<h3>🔹 Onglet 3 – Modélisation prédictive</h3>
+<ul>
+    <li>Choix du modèle (Régression, Random Forest, Gradient Boosting)</li>
+    <li>Prise en compte :
+        <ul>
+            <li>Historique des cas</li>
+            <li>Tendance temporelle</li>
+            <li>Facteurs environnementaux moyens par aire</li>
+        </ul>
+    </li>
+    <li>Prédiction sur plusieurs semaines</li>
+    <li>Indicateurs de performance (MAE, RMSE, R²)</li>
+    <li>Heatmap des cas prédits</li>
+</ul>
+
+<h3>🔹 Onglet 4 – Analyse & Corrélation</h3>
+<ul>
+    <li>Matrice de corrélation</li>
+    <li>Analyse exploratoire des facteurs d’influence</li>
+    <li>Support à l’interprétation scientifique</li>
+</ul>
+</div>
+
+<div class="box">
+<h2>📈 Interprétation des résultats</h2>
+<ul>
+    <li>Les valeurs prédites sont des <strong>tendances probables</strong>, pas des certitudes</li>
+    <li>Les modèles apprennent à partir des données disponibles</li>
+    <li>Les facteurs environnementaux influencent indirectement les cas</li>
+    <li>Plus l’historique est long et fiable, meilleure est la prédiction</li>
+</ul>
+</div>
+
+<div class="box">
+<h2>⚠️ Limites et précautions</h2>
+<ul>
+    <li>Dépendance à la qualité des données</li>
+    <li>Facteurs humains non pris en compte (mobilité, accès aux soins)</li>
+    <li>Les rasters représentent des moyennes spatiales</li>
+    <li>La modélisation ne remplace pas l’expertise terrain</li>
+</ul>
+</div>
+
+<div class="box">
+<h2>🚀 Valeur ajoutée pour la décision</h2>
+<ul>
+    <li>Anticipation des pics épidémiques</li>
+    <li>Ciblage géographique des interventions</li>
+    <li>Priorisation des ressources</li>
+    <li>Communication claire via cartes et graphiques</li>
+</ul>
+</div>
+
+<footer>
+    EpiPalu-Predict – Application SIG & Épidémiologie<br>
+    Développée pour l’aide à la décision en santé publique
+</footer>
+
+</body>
+</html>
