@@ -2053,792 +2053,536 @@ with tab5:
             "application/zip"
         )
 # ============================================================
-# TAB 6 – À PROPOS (VERSION SIMPLIFIÉE)
-# Remplace la section "with tab6:" dans votre code principal
+# TAB 6 – DOCUMENTATION AVANCÉE (À REMPLACER DANS VOTRE CODE)
+# Ajouter après la section méthodologie existante
 # ============================================================
 
 with tab6:
     st.markdown("""
     <style>
-    .guide-section {
+    .section-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 1.5rem;
         border-radius: 12px;
         color: white;
         margin: 1rem 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    .param-card {
+    .info-card {
         background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        border-left: 5px solid #667eea;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .benefit-box {
+        background: #f0f7ff;
         padding: 1rem;
         border-radius: 8px;
         margin: 0.5rem 0;
-        border-left: 4px solid #667eea;
+        border-left: 4px solid #2196F3;
+    }
+    .warning-box {
+        background: #fff3e0;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+        border-left: 4px solid #ff9800;
     }
     </style>
     """, unsafe_allow_html=True)
     
     # En-tête
     st.markdown("""
-    <div class="guide-section">
-        <h1 style="margin:0; text-align:center;">📘 Guide Utilisateur EpiPalu Predict</h1>
-        <p style="text-align:center; font-size:1.1rem; margin-top:1rem;">
-            <i>Votre assistant intelligent pour anticiper le paludisme</i>
+    <div class="section-card">
+        <h1 style="margin:0; text-align:center;">📘 Guide Méthodologique Avancé</h1>
+        <p style="text-align:center; font-size:1.2rem; margin-top:1rem;">
+            <i>EpiPalu Predict - Modélisation scientifique du paludisme</i>
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Navigation rapide
-    guide_tab = st.tabs([
-        "🎯 Démarrage Rapide", 
-        "🔧 Paramètres Expliqués",
-        "📊 Interpréter Résultats",
-        "💡 Conseils Pratiques"
-    ])
+    # ========================================
+    # SECTION MÉTHODOLOGIE SCIENTIFIQUE AVANCÉE
+    # ========================================
+    st.header("🔬 Méthodologie de Modélisation Avancée")
     
-    # ========================================
-    # TAB 1 : DÉMARRAGE RAPIDE
-    # ========================================
-    with guide_tab[0]:
-        st.markdown("## 🎯 Démarrage en 4 Étapes")
-        
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.markdown("""
-            <div class="param-card">
-            <h3>1️⃣ Préparez vos données</h3>
-            <p><b>Obligatoire :</b></p>
-            <ul>
-                <li>📍 <b>Carte zones</b> (GeoJSON/Shapefile)<br>
-                    → Colonne requise : <code>health_area</code></li>
-                <li>📊 <b>Cas hebdomadaires</b> (CSV)<br>
-                    → Colonnes : <code>health_area</code>, <code>week_</code>, <code>cases</code></li>
-            </ul>
-            <p><b>Optionnel mais recommandé :</b></p>
-            <ul>
-                <li>🌡️ <b>Climat</b> : Activez API (gratuit, automatique)<br>
-                    → Télécharge température, pluie, humidité</li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h3>2️⃣ Chargez dans l'app</h3>
-            <ol>
-                <li>Barre latérale → "📁 Chargement"</li>
-                <li>Upload carte + CSV cas</li>
-                <li>Activez "🌦️ API Climat" si souhaité</li>
-            </ol>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("""
-            <div class="param-card">
-            <h3>3️⃣ Lancez la modélisation</h3>
-            <ol>
-                <li>Onglet "🤖 Modélisation"</li>
-                <li>Choisissez :
-                    <ul>
-                        <li><b>Algorithme</b> : RandomForest (débutant) ou GradientBoosting (expert)</li>
-                        <li><b>Horizon</b> : 1-4 semaines (fiable) ou 5-12 (indicatif)</li>
-                        <li><b>Mode</b> : Simple (auto) ou Expert (personnalisé)</li>
-                    </ul>
-                </li>
-                <li>Cliquez "🚀 LANCER"</li>
-                <li>Attendez 30-60 secondes</li>
-            </ol>
-            </div>
-            
-            <div class="param-card">
-            <h3>4️⃣ Exploitez les résultats</h3>
-            <ul>
-                <li>📊 <b>Dashboard</b> : Vue d'ensemble</li>
-                <li>🗺️ <b>Carte</b> : Zones à risque colorées</li>
-                <li>🔮 <b>Prédictions</b> : Cas prévus par zone</li>
-                <li>📥 <b>Export</b> : Téléchargez tout (CSV, GeoJSON)</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        # Exemple visuel
-        st.markdown("### 🎬 Exemple de Workflow")
-        
-        workflow_col1, workflow_col2, workflow_col3, workflow_col4 = st.columns(4)
-        
-        with workflow_col1:
-            st.info("**Semaine 1**\n\n📂 Upload données\n🌡️ Active climat")
-        
-        with workflow_col2:
-            st.success("**Semaine 1-2**\n\n🤖 Lance modèle\n📊 Analyse résultats")
-        
-        with workflow_col3:
-            st.warning("**Semaine 3**\n\n🚨 Détecte zones à risque\n📋 Planifie interventions")
-        
-        with workflow_col4:
-            st.info("**Semaine 4+**\n\n🔄 Met à jour données\n🔮 Nouvelles prédictions")
+    st.markdown("""
+    <div class="info-card">
+    <h3>📐 Approche Scientifique Intégrée</h3>
+    <p style="font-size:1.05rem; line-height:1.8;">
+        Le modèle utilise des <b>méthodes statistiques avancées</b> inspirées de la recherche scientifique 
+        en épidémiologie spatiotemporelle. L'approche combine :
+    </p>
+    <ul style="font-size:1.05rem; line-height:1.8;">
+        <li><b>Analyse en Composantes Principales (ACP)</b> : Réduction dimensionnelle intelligente</li>
+        <li><b>Clustering spatial</b> : Identification de zones géographiques homogènes</li>
+        <li><b>Lag spatial</b> : Capture de l'influence des zones voisines</li>
+        <li><b>Features temporelles enrichies</b> : Fenêtres glissantes multiples (2-8 semaines)</li>
+        <li><b>Validation croisée temporelle</b> : Test robuste sur séries chronologiques</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # ========================================
-    # TAB 2 : PARAMÈTRES EXPLIQUÉS
-    # ========================================
-    with guide_tab[1]:
-        st.markdown("## 🔧 Guide des Paramètres")
-        
-        param_section = st.selectbox(
-            "Sélectionnez une catégorie",
-            ["🤖 Algorithmes", "📐 ACP", "🗺️ Features Spatiales", "📊 Métriques"]
-        )
-        
-        if param_section == "🤖 Algorithmes":
-            st.markdown("""
-            ### 🤖 Choix de l'Algorithme
-            
-            <div class="param-card">
-            <h4>🌲 RandomForest (Recommandé Débutants)</h4>
-            <p><b>Comment ça marche ?</b></p>
-            <ul>
-                <li>Crée 300 "arbres de décision" qui votent ensemble</li>
-                <li>Chaque arbre pose des questions (ex: "Température > 27°C ?")</li>
-                <li>Prédiction finale = moyenne des votes</li>
-            </ul>
-            <p><b>✅ Avantages :</b></p>
-            <ul>
-                <li>Robuste aux erreurs dans les données</li>
-                <li>Peu de risque de sur-apprentissage</li>
-                <li>Facile à interpréter (importance variables)</li>
-            </ul>
-            <p><b>⚠️ Inconvénients :</b></p>
-            <ul>
-                <li>Légèrement moins précis que GradientBoosting</li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h4>📊 GradientBoosting (Expert)</h4>
-            <p><b>Comment ça marche ?</b></p>
-            <ul>
-                <li>Crée 200 arbres <b>séquentiels</b></li>
-                <li>Chaque arbre corrige les erreurs du précédent</li>
-                <li>Apprend progressivement les patterns complexes</li>
-            </ul>
-            <p><b>✅ Avantages :</b></p>
-            <ul>
-                <li>Généralement <b>le plus précis</b> (meilleur R"²")</li>
-                <li>Excellent pour séries temporelles</li>
-                <li>Capture interactions complexes</li>
-            </ul>
-            <p><b>⚠️ Inconvénients :</b></p>
-            <ul>
-                <li>Sensible aux valeurs aberrantes</li>
-                <li>Risque sur-apprentissage si mal paramétré</li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h4>⚡ ExtraTrees (Compromis)</h4>
-            <p><b>Caractéristiques :</b></p>
-            <ul>
-                <li>Similaire à RandomForest mais plus rapide</li>
-                <li>Bon compromis précision/vitesse</li>
-                <li>Utile pour très grandes données</li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h4>💡 Comment choisir ?</h4>
-            <table style="width:100%; border-collapse:collapse; margin-top:1rem;">
-                <tr style="background:#f5f5f5;">
-                    <th style="padding:0.5rem; border:1px solid #ddd;">Situation</th>
-                    <th style="padding:0.5rem; border:1px solid #ddd;">Algorithme Recommandé</th>
-                </tr>
-                <tr>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">Première utilisation</td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;"><b>RandomForest</b></td>
-                </tr>
-                <tr>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">Besoin max précision</td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;"><b>GradientBoosting</b></td>
-                </tr>
-                <tr>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">Données bruitées</td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;"><b>RandomForest</b></td>
-                </tr>
-                <tr>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">Grosses données (>10000 lignes)</td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;"><b>ExtraTrees</b></td>
-                </tr>
-            </table>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        elif param_section == "📐 ACP":
-            st.markdown("""
-            ### 📐 Analyse en Composantes Principales (ACP)
-            
-            <div class="param-card">
-            <h4>🎯 C'est quoi ?</h4>
-            <p>Technique qui <b>réduit le nombre de variables</b> tout en conservant l'essentiel de l'information.</p>
-            <p><b>Exemple concret :</b></p>
-            <ul>
-                <li>Avant ACP : 25 variables (température, pluie, humidité, lag1, lag2, ma2, ma4...)</li>
-                <li>Après ACP : 8 "composantes principales" qui résument ces 25 variables</li>
-                <li>On garde 95% de l'information avec 3x moins de variables !</li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h4>💡 Pourquoi l'utiliser ?</h4>
-            <ol>
-                <li><b>Éviter redondance</b> : Température, humidité, précipitations sont corrélées → l'ACP les combine</li>
-                <li><b>Performances</b> : Moins de variables = calculs plus rapides</li>
-                <li><b>Sur-apprentissage</b> : Réduit le risque que le modèle "mémorise" au lieu d'apprendre</li>
-            </ol>
-            </div>
-            
-            <div class="param-card">
-            <h4>⚙️ Paramètre : % Variance à Conserver</h4>
-            <ul>
-                <li><b>95% (recommandé)</b> : Garde presque toute l'info, réduit modérément</li>
-                <li><b>90%</b> : Réduction plus agressive, risque perte info importante</li>
-                <li><b>98%</b> : Très conservateur, garde presque tout</li>
-            </ul>
-            <p><b>👉 Conseil :</b> Laissez à 95% sauf si vous êtes expert et voulez tester</p>
-            </div>
-            
-            <div class="param-card">
-            <h4>📊 Comment interpréter le graphique ACP ?</h4>
-            <ul>
-                <li><b>Graphique 1 (Variance expliquée)</b> : Montre combien d'info chaque composante contient
-                    <ul>
-                        <li>PC1 = 40% → La composante 1 résume 40% de toute l'info</li>
-                        <li>Ligne rouge cumulée → Objectif : atteindre 95%</li>
-                    </ul>
-                </li>
-                <li><b>Graphique 2 (Contributions)</b> : Quelles variables originales pèsent le plus
-                    <ul>
-                        <li>Exemple : "cases_lag_1" forte contribution → historique très important</li>
-                    </ul>
-                </li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h4>⚠️ Quand NE PAS utiliser l'ACP ?</h4>
-            <ul>
-                <li>Si vous avez < 10 variables (pas besoin de réduire)</li>
-                <li>Si vous voulez comprendre l'impact de chaque variable originale</li>
-                <li>Si vous suspectez que chaque variable a un rôle unique</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        elif param_section == "🗺️ Features Spatiales":
-            st.markdown("""
-            ### 🗺️ Features Spatiales
-            
-            <div class="param-card">
-            <h4>🎯 C'est quoi ?</h4>
-            <p>Prend en compte la <b>proximité géographique</b> entre zones de santé.</p>
-            <p><b>Principe :</b> "Si la zone A a beaucoup de cas, ses voisines B et C risquent d'en avoir aussi"</p>
-            </div>
-            
-            <div class="param-card">
-            <h4>🔵 1. Clustering Spatial</h4>
-            <p><b>Comment ça marche ?</b></p>
-            <ul>
-                <li>Groupe les zones géographiquement proches en "clusters"</li>
-                <li>Exemple : Cluster 1 = toutes les zones côtières, Cluster 2 = zones montagneuses</li>
-                <li>Le modèle apprend que chaque cluster a ses propres caractéristiques</li>
-            </ul>
-            <p><b>Paramètre : Nombre de clusters</b></p>
-            <ul>
-                <li><b>3-5 (petit pays)</b> : Quelques grandes régions homogènes</li>
-                <li><b>5-7 (moyen)</b> : Recommandé pour la plupart des cas</li>
-                <li><b>8-10 (grand pays)</b> : Beaucoup de diversité géographique</li>
-            </ul>
-            <p><b>👉 Conseil :</b> Commencez par 5, augmentez si votre pays a beaucoup de diversité (côte, montagne, savane...)</p>
-            </div>
-            
-            <div class="param-card">
-            <h4>🔴 2. Lag Spatial</h4>
-            <p><b>Comment ça marche ?</b></p>
-            <ul>
-                <li>Pour chaque zone, calcule la <b>moyenne pondérée des cas chez ses voisins</b></li>
-                <li>Exemple : Zone A a 50 cas. Ses 5 voisins ont 40, 45, 38, 42, 48 cas.</li>
-                <li>→ Lag spatial de A = moyenne(40, 45, 38, 42, 48) = 42.6</li>
-                <li>Le modèle sait maintenant : "A est entourée de zones à ~43 cas"</li>
-            </ul>
-            <p><b>Paramètre : Nombre de voisins (k)</b></p>
-            <ul>
-                <li><b>3</b> : Seulement les plus proches (sensible aux variations locales)</li>
-                <li><b>5 (recommandé)</b> : Équilibre local/régional</li>
-                <li><b>7-10</b> : Vision plus large (lisse les variations)</li>
-            </ul>
-            <p><b>👉 Conseil :</b> Laissez à 5 pour un bon équilibre</p>
-            </div>
-            
-            <div class="param-card">
-            <h4>✅ Pourquoi c'est utile ?</h4>
-            <ul>
-                <li>📍 <b>Contagion spatiale</b> : Le paludisme se propage entre zones voisines</li>
-                <li>🚶 <b>Mobilité</b> : Les gens se déplacent entre zones proches</li>
-                <li>🌍 <b>Environnement similaire</b> : Zones proches ont souvent même climat, altitude...</li>
-            </ul>
-            <p><b>Impact :</b> +5-15% de précision typiquement !</p>
-            </div>
-            
-            <div class="param-card">
-            <h4>⚠️ Quand désactiver ?</h4>
-            <ul>
-                <li>Si vos zones sont très éloignées les unes des autres</li>
-                <li>Si vous avez < 10 zones (pas assez pour clustering)</li>
-                <li>Premier essai pour simplifier (réactivez ensuite)</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        else:  # Métriques
-            st.markdown("""
-            ### 📊 Comprendre les Métriques de Performance
-            
-            <div class="param-card">
-            <h4>🎯 R"²" (Coefficient de Détermination)</h4>
-            <p><b>Définition simple :</b> "Quelle % des variations est expliquée par le modèle ?"</p>
-            <p><b>Formule intuitive :</b></p>
-            <ul>
-                <li>R"²" = 1 - (Erreurs du modèle / Variabilité totale des données)</li>
-            </ul>
-            <p><b>Interprétation :</b></p>
-            <table style="width:100%; border-collapse:collapse; margin-top:1rem;">
-                <tr style="background:#f5f5f5;">
-                    <th style="padding:0.5rem; border:1px solid #ddd;">R"²"</th>
-                    <th style="padding:0.5rem; border:1px solid #ddd;">Signification</th>
-                    <th style="padding:0.5rem; border:1px solid #ddd;">Action</th>
-                </tr>
-                <tr>
-                    <td style="padding:0.5rem; border:1px solid #ddd;"><b>> 0.85</b></td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">🟢 Excellent</td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">Utilisable pour décisions stratégiques</td>
-                </tr>
-                <tr>
-                    <td style="padding:0.5rem; border:1px solid #ddd;"><b>0.70-0.85</b></td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">🟡 Bon</td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">OK pour alertes précoces</td>
-                </tr>
-                <tr>
-                    <td style="padding:0.5rem; border:1px solid #ddd;"><b>0.50-0.70</b></td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">🟠 Moyen</td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">Améliorer données (ajouter climat)</td>
-                </tr>
-                <tr>
-                    <td style="padding:0.5rem; border:1px solid #ddd;"><b>< 0.50</b></td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">🔴 Faible</td>
-                    <td style="padding:0.5rem; border:1px solid #ddd;">Revoir complètement (données, paramètres)</td>
-                </tr>
-            </table>
-            <p><b>Exemple concret :</b></p>
-            <ul>
-                <li>R"²" = 0.82 → "Mon modèle explique 82% des variations de cas"</li>
-                <li>Les 18% restants = autres facteurs (interventions, erreurs mesure...)</li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h4>📏 MAE (Mean Absolute Error)</h4>
-            <p><b>Définition :</b> Erreur moyenne en nombre de cas</p>
-            <p><b>Formule :</b> Moyenne de |Cas Réels - Cas Prédits|</p>
-            <p><b>Exemple :</b></p>
-            <ul>
-                <li>Zone A : Réel=40, Prédit=35 → Erreur = 5</li>
-                <li>Zone B : Réel=30, Prédit=28 → Erreur = 2</li>
-                <li>Zone C : Réel=50, Prédit=60 → Erreur = 10</li>
-                <li><b>MAE = (5+2+10)/3 = 5.7 cas</b></li>
-            </ul>
-            <p><b>Interprétation :</b></p>
-            <ul>
-                <li>MAE = 5 → "En moyenne, je me trompe de ±5 cas"</li>
-                <li>Plus MAE est bas, mieux c'est !</li>
-            </ul>
-            <p><b>Contexte :</b></p>
-            <ul>
-                <li>Si vos zones ont 10-50 cas : MAE < 5 = très bon</li>
-                <li>Si vos zones ont 100-500 cas : MAE < 30 = bon</li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h4>📊 RMSE (Root Mean Squared Error)</h4>
-            <p><b>Définition :</b> Erreur quadratique (pénalise + les grosses erreurs)</p>
-            <p><b>Différence avec MAE :</b></p>
-            <ul>
-                <li>MAE traite toutes les erreurs pareil</li>
-                <li>RMSE pénalise davantage les <b>grandes erreurs</b></li>
-            </ul>
-            <p><b>Exemple :</b></p>
-            <ul>
-                <li>Modèle A : Erreurs = [5, 5, 5] → MAE=5, RMSE=5</li>
-                <li>Modèle B : Erreurs = [1, 1, 13] → MAE=5, RMSE=7.6</li>
-                <li>→ Les deux ont même MAE, mais B a un pic d'erreur → RMSE plus élevé</li>
-            </ul>
-            <p><b>Utilité :</b> Détecter si le modèle "rate" les pics épidémiques</p>
-            </div>
-            
-            <div class="param-card">
-            <h4>✅ R"²" Validation Croisée (le plus important !)</h4>
-            <p><b>Problème :</b> Un modèle peut avoir R"²"=0.95 sur données d'entraînement mais R"²"=0.60 sur nouvelles données</p>
-            <p><b>Solution :</b> Validation croisée temporelle</p>
-            <ol>
-                <li><b>Split 1</b> : Entraîne sur semaines 1-40, teste sur 41-52</li>
-                <li><b>Split 2</b> : Entraîne sur semaines 1-30, teste sur 31-40</li>
-                <li>...</li>
-                <li><b>Moyenne des performances</b> → Fiabilité réelle</li>
-            </ol>
-            <p><b>👉 REGARDEZ EN PRIORITÉ LE R"²" CV, PAS LE R"²" SIMPLE !</b></p>
-            <ul>
-                <li>R"²" CV > 0.80 → Excellent</li>
-                <li>R"²" CV > 0.65 → Bon</li>
-                <li>R"²" CV < 0.50 → Problème (sur-apprentissage)</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
+    # Schéma pipeline
+    col1, col2, col3, col4 = st.columns(4)
     
-    # ========================================
-    # TAB 3 : INTERPRÉTER RÉSULTATS
-    # ========================================
-    with guide_tab[2]:
-        st.markdown("## 📊 Interpréter les Résultats")
-        
+    with col1:
         st.markdown("""
-        <div class="param-card">
-        <h3>🎯 1. Regardez d'abord le R"²" CV</h3>
-        <p><b>C'est THE métrique à surveiller</b> (plus fiable que le R"²" simple)</p>
-        <ul>
-            <li>R"²" CV > 0.80 + R"²" > 0.85 → <b>🟢 Excellent, utilisez en confiance</b></li>
-            <li>R"²" CV 0.65-0.80 + R"²" 0.70-0.85 → <b>🟡 Bon, vérifiez avec terrain</b></li>
-            <li>R"²" CV < 0.65 ou (R"²" - R"²" CV) > 0.15 → <b>🔴 Sur-apprentissage, améliorez</b></li>
+        <div class="benefit-box">
+        <h4>1️⃣ FEATURES ENGINEERING</h4>
+        <p><b>Variables créées :</b></p>
+        <ul style="font-size:0.9rem;">
+            <li>📊 Lags temporels (1-4 sem.)</li>
+            <li>📈 Moyennes mobiles (2-8 sem.)</li>
+            <li>📉 Volatilité (écart-types)</li>
+            <li>⚡ Taux croissance</li>
+            <li>🚀 Accélération (dérivée 2)</li>
+            <li>🌊 Min/Max glissants</li>
+            <li>🌀 Harmoniques saisonnières</li>
         </ul>
-        </div>
-        
-        <div class="param-card">
-        <h3>📊 2. Analysez les Variables Importantes</h3>
-        <p><b>Le graphique "Top 15 Variables" vous montre :</b></p>
-        <ul>
-            <li><b>Quels facteurs pèsent le plus</b> dans les prédictions</li>
-            <li>Exemple typique :
-                <ol>
-                    <li>cases_lag_1 (35%) → Historique récent crucial</li>
-                    <li>temp_api (18%) → Température importante</li>
-                    <li>precip_api (15%) → Pluie importante</li>
-                    <li>...</li>
-                </ol>
-            </li>
-        </ul>
-        <p><b>💡 Conseils :</b></p>
-        <ul>
-            <li>Si climat dans le top 5 → API climat essentielle, gardez-la !</li>
-            <li>Si lags dominent (>50%) → Modèle = surtout "tendance", ajoutez plus de contexte</li>
-            <li>Si une variable bizarre en top → Vérifiez qualité des données</li>
-        </ul>
-        </div>
-        
-        <div class="param-card">
-        <h3>🔮 3. Prédictions : Focus sur les Alertes</h3>
-        <p><b>Le tableau "Cas Prédits" :</b></p>
-        <ul>
-            <li>Triez par ordre décroissant</li>
-            <li><b>Top 10-20 zones = vos priorités</b></li>
-            <li>Comparez avec semaine actuelle : hausse prévue ?</li>
-        </ul>
-        <p><b>La Heatmap :</b></p>
-        <ul>
-            <li>🔴 Rouge foncé = Zones à haut risque persistant</li>
-            <li>Ligne qui rougit progressivement = Tendance haussière</li>
-            <li>Ligne qui verdit = Tendance baissière</li>
-        </ul>
-        </div>
-        
-        <div class="param-card">
-        <h3>📅 4. Fiabilité selon l'Horizon</h3>
-        <table style="width:100%; border-collapse:collapse; margin-top:1rem;">
-            <tr style="background:#f5f5f5;">
-                <th style="padding:0.5rem; border:1px solid #ddd;">Horizon</th>
-                <th style="padding:0.5rem; border:1px solid #ddd;">Fiabilité</th>
-                <th style="padding:0.5rem; border:1px solid #ddd;">Usage</th>
-            </tr>
-            <tr>
-                <td style="padding:0.5rem; border:1px solid #ddd;"><b>1-2 semaines</b></td>
-                <td style="padding:0.5rem; border:1px solid #ddd;">🟢 Très fiable</td>
-                <td style="padding:0.5rem; border:1px solid #ddd;">Décisions opérationnelles immédiates</td>
-            </tr>
-            <tr>
-                <td style="padding:0.5rem; border:1px solid #ddd;"><b>3-4 semaines</b></td>
-                <td style="padding:0.5rem; border:1px solid #ddd;">🟡 Bonne</td>
-                <td style="padding:0.5rem; border:1px solid #ddd;">Planification tactique (distribution moustiquaires)</td>
-            </tr>
-            <tr>
-                <td style="padding:0.5rem; border:1px solid #ddd;"><b>5-8 semaines</b></td>
-                <td style="padding:0.5rem; border:1px solid #ddd;">🟠 Indicative</td>
-                <td style="padding:0.5rem; border:1px solid #ddd;">Tendances générales, budget prévisionnel</td>
-            </tr>
-            <tr>
-                <td style="padding:0.5rem; border:1px solid #ddd;"><b>9-12 semaines</b></td>
-                <td style="padding:0.5rem; border:1px solid #ddd;">🔴 Très incertaine</td>
-                <td style="padding:0.5rem; border:1px solid #ddd;">Exploration de scénarios uniquement</td>
-            </tr>
-        </table>
-        </div>
-        
-        <div class="param-card">
-        <h3>⚠️ 5. Signes d'Alerte (Quand NE PAS Faire Confiance)</h3>
-        <ul>
-            <li>🚨 <b>R"²" CV < 0.50</b> → Modèle peu fiable, ne l'utilisez pas</li>
-            <li>🚨 <b>R"²" - R"²" CV > 0.20</b> → Sur-apprentissage sévère</li>
-            <li>🚨 <b>MAE > 30% du nombre moyen de cas</b> → Erreurs trop grandes</li>
-            <li>🚨 <b>Prédictions aberrantes</b> (ex: 500 cas prévus vs 50 historique) → Vérifiez données</li>
-        </ul>
-        <p><b>Actions correctives :</b></p>
-        <ol>
-            <li>Activez API Climat si pas fait</li>
-            <li>Vérifiez valeurs manquantes dans CSV</li>
-            <li>Essayez RandomForest au lieu de GradientBoosting</li>
-            <li>Réduisez horizon (4 sem → 2 sem)</li>
-        </ol>
         </div>
         """, unsafe_allow_html=True)
     
+    with col2:
+        st.markdown("""
+        <div class="benefit-box">
+        <h4>2️⃣ ACP (Optionnel)</h4>
+        <p><b>Réduction dimensionnelle :</b></p>
+        <ul style="font-size:0.9rem;">
+            <li>🔬 Standardisation données</li>
+            <li>📐 Extraction composantes</li>
+            <li>📊 Conservation 95% variance</li>
+            <li>🎯 Ex: 50 vars → 8 composantes</li>
+            <li>✅ Évite sur-apprentissage</li>
+            <li>⚡ Calculs plus rapides</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="benefit-box">
+        <h4>3️⃣ SPATIAL</h4>
+        <p><b>Analyse géographique :</b></p>
+        <ul style="font-size:0.9rem;">
+            <li>🗺️ K-means clustering (5 groupes)</li>
+            <li>📍 Lag spatial pondéré</li>
+            <li>🔗 Influence voisins (k=5)</li>
+            <li>🌐 Autocorrélation spatiale</li>
+            <li>📏 Matrice distances</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown("""
+        <div class="benefit-box">
+        <h4>4️⃣ VALIDATION</h4>
+        <p><b>Test rigoureux :</b></p>
+        <ul style="font-size:0.9rem;">
+            <li>⏰ Time Series Split (5 folds)</li>
+            <li>📊 Validation croisée</li>
+            <li>🎯 Métriques: R², MAE, RMSE</li>
+            <li>📈 Moyenne ± Écart-type</li>
+            <li>✅ Robustesse temporelle</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Détail ACP
+    st.markdown("### 🔬 Analyse en Composantes Principales (ACP)")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("""
+        <div class="info-card">
+        <h4>💡 Principe</h4>
+        <p>L'ACP transforme un ensemble de variables <b>corrélées</b> en un ensemble réduit de variables 
+        <b>non-corrélées</b> (composantes principales) qui capturent la majorité de la variance.</p>
+        
+        <h5>🔢 Exemple Concret</h5>
+        <p><b>Situation initiale :</b></p>
+        <ul>
+            <li>Température, Humidité, Précipitations → <i>Fortement corrélées</i></li>
+            <li>Cas S-1, Cas S-2, Moyenne mobile 4W → <i>Redondance temporelle</i></li>
+            <li>50 variables au total → <i>Risque de sur-apprentissage</i></li>
+        </ul>
+        
+        <p><b>Après ACP :</b></p>
+        <ul>
+            <li><b>PC1</b> (40% variance) : "Composante climatique globale" (température + humidité)</li>
+            <li><b>PC2</b> (25% variance) : "Tendance temporelle" (lags + moyennes mobiles)</li>
+            <li><b>PC3</b> (15% variance) : "Variabilité saisonnière"</li>
+            <li>...</li>
+            <li><b>Total 8 composantes</b> capturent 95% de l'information</li>
+        </ul>
+        
+        <h5>⚖️ Interprétation des Composantes</h5>
+        <p>Chaque composante est une <b>combinaison linéaire</b> des variables originales :</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.code("""
+PC1 = 0.45×Temp + 0.42×Humid + 0.38×Précip + 0.25×CasS-1 + ...
+PC2 = 0.55×CasS-1 + 0.48×CasS-2 + 0.40×MA4 - 0.15×Temp + ...
+PC3 = 0.65×sin_week + 0.62×cos_week + ...
+
+→ Les coefficients indiquent la contribution de chaque variable
+        """, language=None)
+    
+    with col2:
+        st.markdown("""
+        <div class="benefit-box">
+        <h4>✅ Avantages ACP</h4>
+        <ul>
+            <li><b>Réduit complexité</b><br>50 → 8 variables</li>
+            <li><b>Élimine redondance</b><br>Décolle variables corrélées</li>
+            <li><b>Améliore généralisation</b><br>Moins de sur-apprentissage</li>
+            <li><b>Accélère calculs</b><br>Moins de dimensions</li>
+            <li><b>Visualisation</b><br>2-3 composantes suffisent</li>
+        </ul>
+        </div>
+        
+        <div class="warning-box">
+        <h4>⚠️ Limites</h4>
+        <ul>
+            <li>Perd interprétabilité directe</li>
+            <li>Nécessite scaling préalable</li>
+            <li>Linéaire (pas optimal si non-linéarités fortes)</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Détail Clustering Spatial
+    st.markdown("### 🗺️ Clustering Spatial")
+    
+    st.markdown("""
+    <div class="info-card">
+    <h4>💡 Principe</h4>
+    <p>Identifier des <b>groupes de zones géographiques homogènes</b> ayant des profils épidémiologiques similaires.</p>
+    
+    <h5>🔢 Algorithme K-Means</h5>
+    <ol style="line-height:1.8;">
+        <li><b>Entrée :</b> Coordonnées géographiques (latitude, longitude) de chaque aire de santé</li>
+        <li><b>Initialisation :</b> Sélection aléatoire de k centres (ex: k=5)</li>
+        <li><b>Attribution :</b> Chaque zone assignée au centre le plus proche</li>
+        <li><b>Mise à jour :</b> Recalcul des centres comme moyenne des zones du groupe</li>
+        <li><b>Itération :</b> Répéter jusqu'à stabilité</li>
+    </ol>
+    
+    <h5>🎯 Utilité en Épidémiologie</h5>
+    <ul>
+        <li><b>Capture hétérogénéité spatiale</b> : Zones urbaines vs rurales, côtières vs intérieures</li>
+        <li><b>Améliore prédictions</b> : Le modèle apprend des patterns spécifiques à chaque cluster</li>
+        <li><b>Stratégies ciblées</b> : Interventions adaptées par groupe géographique</li>
+    </ul>
+    
+    <h5>📊 Exemple de Clustering</h5>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        st.markdown("""
+        <div class="benefit-box">
+        <table style="width:100%; border-collapse:collapse;">
+            <tr style="background:#f5f5f5;">
+                <th style="padding:0.5rem; border:1px solid #ddd;">Cluster</th>
+                <th style="padding:0.5rem; border:1px solid #ddd;">Caractéristiques</th>
+                <th style="padding:0.5rem; border:1px solid #ddd;">Cas Moy.</th>
+            </tr>
+            <tr>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>Cluster 0</b> (Côtier)</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;">Basse altitude, près rivières, forte humidité</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>120/sem</b></td>
+            </tr>
+            <tr>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>Cluster 1</b> (Urbain)</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;">Dense, assainissement variable</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>85/sem</b></td>
+            </tr>
+            <tr>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>Cluster 2</b> (Rural plaine)</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;">Rizières, marais, forte transmission</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>150/sem</b></td>
+            </tr>
+            <tr>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>Cluster 3</b> (Montagne)</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;">Altitude > 800m, faible transmission</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>20/sem</b></td>
+            </tr>
+            <tr>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>Cluster 4</b> (Semi-aride)</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;">Faibles précipitations, transmission saisonnière</td>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>45/sem</b></td>
+            </tr>
+        </table>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="info-card">
+        <h5>🔍 Variables Cluster</h5>
+        <p>Le modèle crée des <b>variables binaires</b> :</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.code("""
+cluster_0 = [1, 0, 0, 0, 0]  # Zone côtière
+cluster_1 = [0, 1, 0, 0, 0]  # Zone urbaine
+cluster_2 = [0, 0, 1, 0, 0]  # Rural plaine
+...
+
+→ Le modèle apprend poids spécifiques
+   pour chaque type de zone
+        """, language=None)
+    
+    # Détail Lag Spatial
+    st.markdown("### 📍 Lag Spatial")
+    
+    st.markdown("""
+    <div class="info-card">
+    <h4>💡 Principe</h4>
+    <p>Le <b>lag spatial</b> mesure l'influence des zones <b>voisines</b> sur le nombre de cas d'une zone.</p>
+    <p><i>Hypothèse :</i> Si mes voisins ont beaucoup de cas, j'ai probablement plus de risques 
+    (migration moustiques, mouvements population).</p>
+    
+    <h5>🔢 Calcul</h5>
+    <p>Pour une zone <b>i</b>, on calcule la <b>moyenne pondérée</b> des cas des k voisins les plus proches :</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.code("""
+Lag_spatial(zone_i) = Σ (w_ij × Cas_j)  pour j = k voisins les plus proches
+
+où w_ij = 1 / distance(i, j)  (poids inversement proportionnel à la distance)
+
+Exemple avec k=5 voisins :
+Zone A : 50 cas, distance 2 km  → poids = 0.50
+Zone B : 30 cas, distance 5 km  → poids = 0.20
+Zone C : 40 cas, distance 3 km  → poids = 0.33
+Zone D : 20 cas, distance 10 km → poids = 0.10
+Zone E : 60 cas, distance 4 km  → poids = 0.25
+
+Total poids = 1.38
+Lag_spatial = (0.50×50 + 0.20×30 + 0.33×40 + 0.10×20 + 0.25×60) / 1.38
+            = (25 + 6 + 13.2 + 2 + 15) / 1.38
+            = 44.3 cas "d'influence voisins"
+    """, language=None)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="benefit-box">
+        <h4>✅ Utilité</h4>
+        <ul>
+            <li><b>Capture autocorrélation spatiale</b><br>"Les cas se regroupent géographiquement"</li>
+            <li><b>Détecte clusters épidémiques</b><br>Zones "hot spots"</li>
+            <li><b>Améliore prédictions</b><br>+5-10% de précision en zones denses</li>
+            <li><b>Modélise diffusion</b><br>Propagation géographique</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="warning-box">
+        <h4>⚙️ Paramètre Clé : k</h4>
+        <ul>
+            <li><b>k=3</b> : Influence très locale<br>(voisins immédiats)</li>
+            <li><b>k=5</b> : Équilibre<br>(recommandé)</li>
+            <li><b>k=10</b> : Influence régionale<br>(peut lisser trop)</li>
+        </ul>
+        <br>
+        <p><i>💡 En pratique, k=5 fonctionne bien pour la plupart des contextes épidémiologiques.</i></p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Validation Croisée Temporelle
+    st.markdown("### ⏰ Validation Croisée Temporelle")
+    
+    st.markdown("""
+    <div class="info-card">
+    <h4>💡 Pourquoi spéciale pour séries temporelles ?</h4>
+    <p>En épidémiologie, <b>l'ordre temporel est crucial</b>. On ne peut pas tester le modèle sur des données 
+    <i>antérieures</i> à celles d'entraînement (ça n'a pas de sens de "prédire le passé" !)</p>
+    
+    <h5>🔢 Time Series Split (5 Folds)</h5>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.code("""
+Données : Semaines 1 à 52
+
+Fold 1 :
+  Entraînement : S1-S30  →  Test : S31-S40  →  R² = 0.82
+
+Fold 2 :
+  Entraînement : S1-S35  →  Test : S36-S44  →  R² = 0.78
+
+Fold 3 :
+  Entraînement : S1-S40  →  Test : S41-S48  →  R² = 0.85
+
+Fold 4 :
+  Entraînement : S1-S44  →  Test : S45-S50  →  R² = 0.80
+
+Fold 5 :
+  Entraînement : S1-S48  →  Test : S49-S52  →  R² = 0.83
+
+Performance finale : R² = 0.82 ± 0.03  ✅ (Robuste !)
+    """, language=None)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="benefit-box">
+        <h4>✅ Avantages</h4>
+        <ul>
+            <li><b>Réaliste</b> : Simule vraie utilisation (prédire futur avec passé)</li>
+            <li><b>Détecte sur-apprentissage</b> : Si R² entraînement >> R² test</li>
+            <li><b>Mesure robustesse</b> : Écart-type faible = modèle stable</li>
+            <li><b>Compare algorithmes</b> : Choix objectif du meilleur</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="info-card">
+        <h4>📊 Interprétation Résultats</h4>
+        <table style="width:100%; border-collapse:collapse;">
+            <tr style="background:#f5f5f5;">
+                <th style="padding:0.5rem; border:1px solid #ddd;">Écart-type R²</th>
+                <th style="padding:0.5rem; border:1px solid #ddd;">Signification</th>
+            </tr>
+            <tr>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>< 0.05</b></td>
+                <td style="padding:0.5rem; border:1px solid #ddd;">🟢 Très stable</td>
+            </tr>
+            <tr>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>0.05-0.10</b></td>
+                <td style="padding:0.5rem; border:1px solid #ddd;">🟡 Acceptable</td>
+            </tr>
+            <tr>
+                <td style="padding:0.5rem; border:1px solid #ddd;"><b>> 0.10</b></td>
+                <td style="padding:0.5rem; border:1px solid #ddd;">🔴 Instable</td>
+            </tr>
+        </table>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
     # ========================================
-    # TAB 4 : CONSEILS PRATIQUES
+    # GLOSSAIRE FEATURES
     # ========================================
-    with guide_tab[3]:
-        st.markdown("## 💡 Conseils Pratiques")
+    st.header("📖 Glossaire des Variables du Modèle")
+
+    st.markdown('''
+    <div class="info-card">
+    <p>Ce glossaire explique toutes les variables utilisées par le modèle de prédiction avancé.</p>
+    </div>
+    ''', unsafe_allow_html=True)
+
+    glossary_tabs = st.tabs([
+        "⏰ Temporelles", 
+        "📊 Historique Cas", 
+        "🌡️ Climat", 
+        "🌍 Environnement"
+    ])
+
+    with glossary_tabs[0]:
+        st.markdown('''
+        ### ⏰ Variables Temporelles
         
-        col1, col2 = st.columns(2)
+        <div class="info-card">
+        <h4>Numéro de semaine (week_num)</h4>
+        <p><b>Signification :</b> Numéro séquentiel de la semaine (1, 2, 3...)</p>
+        <p><b>Utilité :</b> Capture la tendance générale dans le temps</p>
+        <p><b>Exemple :</b> Semaine 20 → printemps (hausse attendue)</p>
+        </div>
         
-        with col1:
-            st.markdown("""
-            <div class="param-card">
-            <h3>✅ Bonnes Pratiques</h3>
-            <h4>📊 Qualité des Données</h4>
-            <ul>
-                <li>✔️ Vérifiez cohérence noms zones (carte ↔ CSV)</li>
-                <li>✔️ Pas de semaines manquantes (combler par 0 si besoin)</li>
-                <li>✔️ Au moins 20 semaines historique (idéal: 52+)</li>
-                <li>✔️ Activez API Climat (gratuit, +15-25% précision !)</li>
-            </ul>
-            
-            <h4>🔄 Workflow Récurrent</h4>
-            <ol>
-                <li><b>Chaque lundi</b> : Ajoutez données semaine précédente au CSV</li>
-                <li><b>Relancez modélisation</b> avec données mises à jour</li>
-                <li><b>Comparez prédictions S-1 vs réalité</b> → Évaluez fiabilité</li>
-                <li><b>Exportez nouvelles prédictions</b> → Partagez avec équipes</li>
-                <li><b>Archivez</b> prédictions pour traçabilité</li>
-            </ol>
-            
-            <h4>🎯 Utilisation Opérationnelle</h4>
-            <ul>
-                <li>✔️ Croisez avec données terrain (superviseurs)</li>
-                <li>✔️ Préparez interventions <b>2 semaines avant</b> pic prévu</li>
-                <li>✔️ Communiquez incertitudes (pas de certitude absolue)</li>
-                <li>✔️ Validez décisions avec experts médicaux</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
+        <div class="info-card">
+        <h4>Saisonnalité (sin_week, cos_week)</h4>
+        <p><b>Signification :</b> Représentation mathématique des cycles annuels</p>
+        <p><b>Utilité :</b> Capture les variations saisonnières (pic saison pluies)</p>
+        <p><b>Calcul :</b> sin(2π × semaine / 52) et cos(2π × semaine / 52)</p>
+        <p><b>Pourquoi ?</b> Permet au modèle de savoir que la semaine 1 et 52 sont proches</p>
+        </div>
         
-        with col2:
-            st.markdown("""
-            <div class="param-card">
-            <h3>⚠️ Erreurs Fréquentes à Éviter</h3>
-            <h4>🔴 Données</h4>
-            <ul>
-                <li> Noms zones différents (carte: "Dakar" vs CSV: "DAKAR")</li>
-                <li> Semaines non continues (S20, S22, S23... → manque S21)</li>
-                <li> Dates/années incohérentes</li>
-                <li> Valeurs négatives dans "cases"</li>
-            </ul>
-               """, unsafe_allow_html=True)
-            <h4> Modélisation</h4>
-            <ul>
-                <li> Horizon trop long (>8 sem) sans expertise</li>
-                <li> Ignorer R"²" CV (regarder que R"²" simple)</li>
-                <li> Croire prédictions si R"²" CV < 0.50</li>
-                <li> Ne pas mettre à jour régulièrement</li>
-            </ul>
-            
-            <h4>Interprétation</h4>
-            <ul>
-                <li> Décisions uniquement basées sur modèle</li>
-                <li> Ignorer facteurs non mesurés (campagnes, ruptures stock...)</li>
-                <li> Oublier que corrélation ≠ causalité</li>
-                <li> Sur-confiance dans prédictions lointaines</li>
-            </ul>
-            </div>
-            
-            <div class="param-card">
-            <h3>🚀 Pour Aller Plus Loin</h3>
-            <ul>
-                <li>📚 Ajoutez rasters environnementaux (altitude, rivières)</li>
-                <li>🌡️ Comparez sources climat (NASA vs Open-Meteo)</li>
-                <li>📊 Testez différents algorithmes sur mêmes données</li>
-                <li>📈 Analysez corrélations (onglet "Analyse Avancée")</li>
-                <li>📥 Exportez tout pour rapports annuels</li>
-            </ul>
-            </div>
-        </with>
+        <div class="info-card">
+        <h4>Harmoniques supplémentaires (sin_week_2, cos_week_2)</h4>
+        <p><b>Signification :</b> Capture cycles plus rapides (bi-annuels)</p>
+        <p><b>Calcul :</b> sin(4π × semaine / 52) et cos(4π × semaine / 52)</p>
+        <p><b>Utilité :</b> Modélise saisons pluies multiples (ex: 2 pics par an)</p>
+        </div>
+        ''', unsafe_allow_html=True)
+
+    with glossary_tabs[1]:
+        st.markdown('''
+        ### 📊 Variables Historique des Cas
         
-        st.markdown("---")
+        <div class="info-card">
+        <h4>Lags temporels (cases_lag_1, cases_lag_2, cases_lag_4)</h4>
+        <p><b>Signification :</b> Nombre de cas 1, 2 ou 4 semaines avant</p>
+        <p><b>Utilité :</b> <b>Variable la plus importante</b> - Tendance récente</p>
+        <p><b>Exemple :</b> 50 cas en S24 → Prédiction S25 ≈ 48-52 cas</p>
+        </div>
         
-        # Cas d'usage réels
-        st.markdown("### 🎬 Exemples de Cas d'Usage")
+        <div class="info-card">
+        <h4>Moyennes mobiles (cases_ma_2, cases_ma_4, cases_ma_8)</h4>
+        <p><b>Signification :</b> Moyenne des 2, 4 ou 8 dernières semaines</p>
+        <p><b>Utilité :</b> Lisse les fluctuations, montre tendance globale</p>
+        <p><b>Calcul :</b> MA2 = (S-1 + S-2) / 2</p>
+        <p><b>Avantage :</b> Moins sensible aux pics isolés</p>
+        </div>
         
-        use_case = st.selectbox(
-            "Choisissez un scénario",
-            [
-                "🏥 Chef Programme Paludisme",
-                "📊 Épidémiologiste District",
-                "💊 Gestionnaire Médicaments",
-                "🎓 Chercheur Universitaire"
-            ]
-        )
+        <div class="info-card">
+        <h4>Volatilité (cases_std_2, cases_std_4, cases_std_8)</h4>
+        <p><b>Signification :</b> Écart-type sur 2, 4 ou 8 semaines</p>
+        <p><b>Utilité :</b> Mesure stabilité/variabilité des cas</p>
+        <p><b>Interprétation :</b> 
+            <ul>
+                <li>STD faible → Transmission stable</li>
+                <li>STD élevé → Épidémie volatile (pics brutaux)</li>
+            </ul>
+        </p>
+        </div>
         
-        if "Chef Programme" in use_case:
-            st.markdown("""
-            <div class="param-card">
-            <h4>Profil : Chef de Programme National Paludisme</h4>
-            <p><b>Objectif :</b> Anticiper besoins nationaux en médicaments et moustiquaires</p>
-            
-            <h5>\U0001F5D3 Workflow Mensuel</h5>
-            <ol>
-                <li><b>Semaine 1</b> : Collecte données des districts</li>
-                <li><b>Semaine 2</b> : Upload dans EpiPalu + API Climat</li>
-                <li><b>Semaine 2</b> : Modélisation 8 semaines (horizon moyen terme)</li>
-                <li><b>Semaine 3</b> : Analyse top 20 districts à risque</li>
-                <li><b>Semaine 3</b> : Réunion équipe → Décisions allocation ressources</li>
-                <li><b>Semaine 4</b> : Prépositionne stocks dans zones prévues à risque</li>
-            </ol>
-            
-            <h5>📊 Paramètres Recommandés</h5>
-            <ul>
-                <li><b>Algorithme</b> : GradientBoosting (max précision)</li>
-                <li><b>Horizon</b> : 6-8 semaines (planification stratégique)</li>
-                <li><b>Mode</b> : Expert (activer ACP + Spatial)</li>
-                <li><b>API Climat</b> : Obligatoire (patterns nationaux)</li>
-            </ul>
-            
-            <h5>✅ Indicateurs de Succès</h5>
-            <ul>
-                <li>R"²" CV > 0.75 pour prédictions nationales</li>
-                <li>Réduction ruptures stock de 30% après 6 mois</li>
-                <li>Anticipation pics épidémiques 3-4 semaines avant</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
+        <div class="info-card">
+        <h4>Taux de croissance (growth_rate)</h4>
+        <p><b>Signification :</b> Variation % entre 2 semaines consécutives</p>
+        <p><b>Formule :</b> (CasS - CasS-1) / CasS-1</p>
+        <p><b>Exemple :</b> 40→50 cas → +25% (croissance rapide)</p>
+        <p><b>Utilité :</b> Détecte accélérations/décélérations épidémiques</p>
+        </div>
         
-        elif "Épidémiologiste" in use_case:
-            st.markdown("""
-            <div class="param-card">
-            <h4>Profil : Épidémiologiste de District</h4>
-            <p><b>Objectif :</b> Alertes précoces hebdomadaires pour interventions rapides</p>
-            
-            <h5>🗓️ Workflow Hebdomadaire</h5>
-            <ol>
-                <li><b>Lundi matin</b> : Récupère données semaine écoulée</li>
-                <li><b>Lundi 10h</b> : Met à jour CSV + relance modélisation</li>
-                <li><b>Lundi 11h</b> : Génère carte zones à risque S+1 et S+2</li>
-                <li><b>Lundi 14h</b> : Briefing équipes terrain avec prédictions</li>
-                <li><b>Mardi-Vendredi</b> : Renforce surveillance zones alertées</li>
-            </ol>
-            
-            <h5>📊 Paramètres Recommandés</h5>
+        <div class="info-card">
+        <h4>Accélération (acceleration)</h4>
+        <p><b>Signification :</b> Variation du taux de croissance (dérivée seconde)</p>
+        <p><b>Formule :</b> growth_rate(S) - growth_rate(S-1)</p>
+        <p><b>Utilité :</b> Détecte changements de dynamique
             <ul>
-                <li><b>Algorithme</b> : RandomForest (robuste, rapide)</li>
-                <li><b>Horizon</b> : 2 semaines (court terme fiable)</li>
-                <li><b>Mode</b> : Simple (gain de temps)</li>
-                <li><b>API Climat</b> : Oui (améliore précision locale)</li>
+                <li>Accélération positive → Épidémie s'amplifie</li>
+                <li>Accélération négative → Épidémie ralentit</li>
             </ul>
-            
-            <h5>✅ Indicateurs de Succès</h5>
-            <ul>
-                <li>R"²" CV > 0.80 pour prédictions 1-2 semaines</li>
-                <li>80%+ des alertes confirmées par terrain</li>
-                <li>Détection précoce de 70%+ des pics</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
+        </p>
+        </div>
         
-        elif "Gestionnaire" in use_case:
-            st.markdown("""
-            <div class="param-card">
-            <h4>Profil : Gestionnaire Approvisionnement Médicaments</h4>
-            <p><b>Objectif :</b> Optimiser stocks et éviter ruptures</p>
-            
-            <h5>🗓️ Workflow Bimensuel</h5>
-            <ol>
-                <li><b>J1</b> : Modélisation 4 semaines pour toutes zones</li>
-                <li><b>J2</b> : Somme cas prévus par zone → Besoins en ACT</li>
-                <li><b>J3</b> : Compare stocks actuels vs besoins prévus</li>
-                <li><b>J4</b> : Planifie redistributions/commandes</li>
-                <li><b>J5-14</b> : Exécution logistique</li>
-            </ol>
-            
-            <h5>📊 Paramètres Recommandés</h5>
-            <ul>
-                <li><b>Algorithme</b> : ExtraTrees (rapide pour gros volumes)</li>
-                <li><b>Horizon</b> : 4 semaines (cycle réappro)</li>
-                <li><b>Mode</b> : Simple</li>
-                <li><b>Focus</b> : Sommes agrégées, pas détails par zone</li>
-            </ul>
-            
-            <h5>✅ Indicateurs de Succès</h5>
-            <ul>
-                <li>Réduction taux rupture stock de 25% → 5%</li>
-                <li>Économies sur commandes urgentes (-40%)</li>
-                <li>Meilleure rotation stocks (FEFO optimisé)</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        else:  # Chercheur
-            st.markdown("""
-            <div class="param-card">
-            <h4>Profil : Chercheur en Épidémiologie</h4>
-            <p><b>Objectif :</b> Analyser facteurs de risque et publier études</p>
-            
-            <h5>🗓️ Workflow Recherche</h5>
-            <ol>
-                <li><b>Phase 1</b> : Collecte données multi-années (2-5 ans)</li>
-                <li><b>Phase 2</b> : Tests comparatifs algorithmes (RF vs GB vs ET)</li>
-                <li><b>Phase 3</b> : Analyse importance variables (ACP + corrélations)</li>
-                <li><b>Phase 4</b> : Validation croisée temporelle rigoureuse</li>
-                <li><b>Phase 5</b> : Rédaction article + visualisations</li>
-            </ol>
-            
-            <h5>📊 Paramètres Recommandés</h5>
-            <ul>
-                <li><b>Mode</b> : Expert (tester tous paramètres)</li>
-                <li><b>ACP</b> : Oui + analyser composantes principales</li>
-                <li><b>Spatial</b> : Oui + étudier autocorrélation spatiale</li>
-                <li><b>API Climat</b> : Tester NASA vs Open-Meteo</li>
-            </ul>
-            
-            <h5>📈 Analyses Approfondies</h5>
-            <ul>
-                <li>Onglet "Analyse Avancée" : Matrices corrélations</li>
-                <li>Exporter toutes variables pour analyses R/Python</li>
-                <li>Comparer performances selon saisons</li>
-                <li>Tester lag climatique optimal (1-4 semaines)</li>
-            </ul>
-            
-            <h5>✅ Publications Potentielles</h5>
-            <ul>
-                <li>Impact climat sur transmission (corrélations)</li>
-                <li>Comparaison algorithmes ML pour prédiction paludisme</li>
-                <li>Importance facteurs spatiaux vs temporels</li>
-                <li>Validation modèles prédictifs multi-pays</li>
-            </ul>
-            </div>
-            """, unsafe_allow_html=True)
+        <div class="info-card">
+        <h4>Min/Max glissants (cases_min_4, cases_max_4, cases_min_8, cases_max_8)</h4>
+        <p><b>Signification :</b> Valeurs extrêmes sur fenêtres 4 et 8 semaines</p>
+        <p><b>Utilité :</b> Capture amplitude variations récentes</p>
+        <p><b>Exemple :</b> Max_4 très élevé → Pic récent = zone à risque</p>
+        </div>
+        ''', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -2898,6 +2642,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
