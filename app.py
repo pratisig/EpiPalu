@@ -2708,7 +2708,7 @@ with tab6:
             <h4>Profil : Chef de Programme National Paludisme</h4>
             <p><b>Objectif :</b> Anticiper besoins nationaux en médicaments et moustiquaires</p>
             
-            <h5>🗓️ Workflow Mensuel</h5>
+            <h5>\U0001F5D3 Workflow Mensuel</h5>
             <ol>
                 <li><b>Semaine 1</b> : Collecte données des districts</li>
                 <li><b>Semaine 2</b> : Upload dans EpiPalu + API Climat</li>
@@ -2898,6 +2898,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
