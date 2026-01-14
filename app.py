@@ -2658,7 +2658,7 @@ with tab6:
                 <li>❌ Valeurs négatives dans "cases"</li>
             </ul>
                """, unsafe_allow_html=True)
-            <h4>🔴 Modélisation</h4>
+            <h4> Modélisation</h4>
             <ul>
                 <li>❌ Horizon trop long (>8 sem) sans expertise</li>
                 <li>❌ Ignorer R² CV (regarder que R² simple)</li>
@@ -2666,7 +2666,7 @@ with tab6:
                 <li>❌ Ne pas mettre à jour régulièrement</li>
             </ul>
             
-            <h4>🔴 Interprétation</h4>
+            <h4>Interprétation</h4>
             <ul>
                 <li>❌ Décisions uniquement basées sur modèle</li>
                 <li>❌ Ignorer facteurs non mesurés (campagnes, ruptures stock...)</li>
@@ -2898,6 +2898,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
