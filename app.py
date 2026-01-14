@@ -1538,7 +1538,7 @@ with tab3:
                     
                     # Validation croisée
                     tscv = TimeSeriesSplit(n_splits=5)
-                    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring='R"²"', n_jobs=-1)
+                    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring=R2, n_jobs=-1)
                     cv_mae = -cross_val_score(model, X, y, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
                     progress_bar.progress(85)
                     
@@ -1622,7 +1622,7 @@ with tab3:
                     # Sauvegarder
                     st.session_state.model_results = {
                         'df_model': df_model, 'df_future': df_future,
-                        'metrics': {'mae': mae, 'rmse': rmse, 'R"²"': R"²", 'cv_R"²"_mean': cv_scores.mean(), 'cv_R"²"_std': cv_scores.std()},
+                        'metrics': {'mae': mae, 'rmse': rmse, R2: R"²", 'cv_R"²"_mean': cv_scores.mean(), 'cv_R"²"_std': cv_scores.std()},
                         'pca_info': pca_info, 'feature_cols': feature_cols
                     }
                     
@@ -1642,11 +1642,11 @@ with tab3:
                 col1, col2, col3, col4 = st.columns(4)
                 col1.metric("📉 MAE", f"{metrics['mae']:.2f}")
                 col2.metric("📊 RMSE", f"{metrics['rmse']:.2f}")
-                col3.metric("🎯 R2, f"{metrics['R"²"']:.3f}")
+                col3.metric("🎯 R2, f"{metrics[R2]:.3f}")
                 col4.metric("✅ R2 CV", f"{metrics['cv_R"²"_mean']:.3f}")
                 
                 # Interprétation
-                R"²", cv_R"²" = metrics['R"²"'], metrics['cv_R"²"_mean']
+                R"²", cv_R"²" = metrics[R2], metrics['cv_R"²"_mean']
                 if R"²" > 0.85 and cv_R"²" > 0.80:
                     st.success(f"✅ **Excellent** : R"²"={R"²":.3f}, CV={cv_R"²":.3f} - Fiable pour décisions stratégiques")
                 elif R"²" > 0.70 and cv_R"²" > 0.65:
@@ -2764,6 +2764,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
