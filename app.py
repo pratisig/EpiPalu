@@ -2624,89 +2624,37 @@ Performance finale : r2 = 0.82 +/- 0.03  ✅ (Robuste !)
     <p><b>Exemple :</b> Max_4 tres eleve → Pic recent = zone a risque</p>
     </div>
     ''', unsafe_allow_html=True)
-
+# BLOC glossary_tabs[2] - Variables Climatiques
 with glossary_tabs[2]:
     st.markdown('''
-    ### 🌡️ Variables Climatiques
+    ### Variables Climatiques
     
     <div class="info-card">
     <h4>Temperature moyenne (temp_api)</h4>
     <p><b>Signification :</b> Temperature moyenne hebdomadaire en degres C</p>
-    <p><b>Source :</b> NASA POWER ou Open-Meteo</p>
-    <p><b>Impact :</b> Optimum moustique = 25-28 degres C</p>
-    <p><b>Relation :</b> 
-        <ul>
-            <li>< 18 degres C : Peu d'activite vectorielle</li>
-            <li>25-28 degres C : Maximum transmission</li>
-            <li>> 35 degres C : Reduction activite</li>
-        </ul>
-    </p>
     </div>
     
     <div class="info-card">
     <h4>Precipitations totales (precip_api)</h4>
     <p><b>Signification :</b> Cumul pluies hebdomadaires en mm</p>
-    <p><b>Impact :</b> Cree gites larvaires (mares, flaques)</p>
-    <p><b>Delai :</b> Pic cas ~2-3 semaines apres fortes pluies</p>
-    <p><b>Seuil critique :</b> > 100 mm/semaine</p>
-    </div>
-    
-    <div class="info-card">
-    <h4>Humidite relative (humidity_api)</h4>
-    <p><b>Signification :</b> Humidite moyenne hebdomadaire en %</p>
-    <p><b>Impact :</b> Favorise survie moustiques adultes</p>
-    <p><b>Seuil optimal :</b> > 60%</p>
-    <p><b>Interaction :</b> Amplifie effet temperature</p>
     </div>
     ''', unsafe_allow_html=True)
 
-with glossary_tabs[3]:
+# ✅ ATTENTION : Le with glossary_tabs[3] doit être AU MÊME NIVEAU que glossary_tabs[2]
+# PAS d'indentation supplémentaire !
+
+with glossary_tabs[3]:  # ✅ Même niveau que le "with glossary_tabs[2]:" ci-dessus
     st.markdown('''
-    ### 🌍 Variables Environnementales
+    ### Variables Environnementales
     
     <div class="info-card">
     <h4>Niveau d'inondation (flood_mean)</h4>
     <p><b>Signification :</b> Hauteur d'eau moyenne zone inondable</p>
-    <p><b>Source :</b> Raster Fathom ou similaire</p>
-    <p><b>Impact :</b> Zones inondables = + gites temporaires</p>
-    </div>
-    
-    <div class="info-card">
-    <h4>Altitude moyenne (elevation_mean)</h4>
-    <p><b>Signification :</b> Elevation moyenne de la zone en metres</p>
-    <p><b>Impact :</b> Generalement correlation negative
-        <ul>
-            <li>< 500m : Risque eleve</li>
-            <li>500-1000m : Risque modere</li>
-            <li>> 1500m : Risque faible (trop froid)</li>
-        </ul>
-    </p>
-    </div>
-    
-    <div class="info-card">
-    <h4>Distance aux rivieres (dist_river)</h4>
-    <p><b>Signification :</b> Distance minimum aux cours d'eau en km</p>
-    <p><b>Impact :</b> Proximite eau = + reproduction moustiques</p>
-    <p><b>Seuil :</b> < 2 km → Risque accru</p>
-    </div>
-    
-    <div class="info-card">
-    <h4>Lag spatial (spatial_lag)</h4>
-    <p><b>Signification :</b> Moyenne ponderee cas des zones voisines</p>
-    <p><b>Calcul :</b> Somme (poids × cas_voisin) avec poids = 1/distance</p>
-    <p><b>Utilite :</b> Capture propagation geographique</p>
-    </div>
-    
-    <div class="info-card">
-    <h4>Clusters spatiaux (cluster_0, cluster_1...)</h4>
-    <p><b>Signification :</b> Variables binaires identifiant type geographique</p>
-    <p><b>Utilite :</b> Modele apprend patterns specifiques par cluster</p>
-    <p><b>Exemple :</b> cluster_2 = 1 → Zone rurale plaine (risque eleve)</p>
     </div>
     ''', unsafe_allow_html=True)
 
+# APRÈS le bloc glossary_tabs, continuer au même niveau (sans indentation)
 st.markdown("---")
-
 # ========================================
 # SECTION SUPPORT
 # ========================================
@@ -2765,6 +2713,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
