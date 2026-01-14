@@ -29,7 +29,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import mean_absolute_error, mean_squared_error, R"²"_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, R2_score
 from branca.colormap import linear
 from PIL import Image
 from io import BytesIO
@@ -1547,7 +1547,7 @@ with tab3:
                     df_model["predicted_cases"] = model.predict(X).clip(0).round().astype(int)
                     mae = mean_absolute_error(y, df_model["predicted_cases"])
                     rmse = np.sqrt(mean_squared_error(y, df_model["predicted_cases"]))
-                    R"²" = R"²"_score(y, df_model["predicted_cases"])
+                    R2 = R2_score(y, df_model["predicted_cases"])
                     progress_bar.progress(90)
                     
                     # Prédictions futures
@@ -1622,7 +1622,7 @@ with tab3:
                     # Sauvegarder
                     st.session_state.model_results = {
                         'df_model': df_model, 'df_future': df_future,
-                        'metrics': {'mae': mae, 'rmse': rmse, R2: R"²", 'cv_R"²"_mean': cv_scores.mean(), 'cv_R"²"_std': cv_scores.std()},
+                        'metrics': {'mae': mae, 'rmse': rmse, R2: R2, 'cv_R2_mean': cv_scores.mean(), 'cv_R2_std': cv_scores.std()},
                         'pca_info': pca_info, 'feature_cols': feature_cols
                     }
                     
@@ -1643,13 +1643,13 @@ with tab3:
                 col1.metric("📉 MAE", f"{metrics['mae']:.2f}")
                 col2.metric("📊 RMSE", f"{metrics['rmse']:.2f}")
                 col3.metric("🎯 R2", f"{metrics['r2']:.3f}")
-                col4.metric("✅ R2 CV", f"{metrics['cv_R"²"_mean']:.3f}")
+                col4.metric("✅ R2 CV", f"{metrics['cv_R2_mean']:.3f}")
                 
                 # Interprétation
-                R"²", cv_R2= metrics[R2], metrics['cv_R"²"_mean']
-                if R"²" > 0.85 and cv_R2> 0.80:
+                R2, cv_R2= metrics[R2], metrics['cv_R2_mean']
+                if R2 > 0.85 and cv_R2> 0.80:
                     st.success(f"✅ **Excellent** : R2={R2:.3f}, CV={cv_R2:.3f} - Fiable pour décisions stratégiques")
-                elif R"²" > 0.70 and cv_R2> 0.65:
+                elif R2 > 0.70 and cv_R2> 0.65:
                     st.info(f"🟡 **Bon** : R2={R2:.3f}, CV={cv_R2:.3f} - OK pour alertes précoces")
                 else:
                     st.warning(f"⚠️ **Moyen** : R2={R2:.3f}, CV={cv_R2:.3f} - Activer climat / vérifier données")
@@ -2764,6 +2764,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
