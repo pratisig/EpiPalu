@@ -404,7 +404,7 @@ def aggregate_climate_by_week_and_area(gdf_health, df_cases, year, api_choice="N
         st.info(f"📍 Couverture: {coverage_areas}/{len(gdf_health)} aires ({coverage_areas/len(gdf_health)*100:.1f}%)")
         st.info(f"📅 Couverture: {coverage_weeks}/{len(weeks)} semaines ({coverage_weeks/len(weeks)*100:.1f}%)")
     else:
-        st.error("❌ Aucune donnée climatique extraite")
+        st.error(" Aucune donnée climatique extraite")
     
     return df_result
 
@@ -523,7 +523,7 @@ def validate_numeric_features(df, feature_cols):
             non_numeric.append((col, df[col].dtype))
     
     if non_numeric:
-        st.error(f"❌ Colonnes non-numériques détectées : {non_numeric}")
+        st.error(f" Colonnes non-numériques détectées : {non_numeric}")
         return False
     return True
 
@@ -609,7 +609,7 @@ with st.sidebar.expander("📍 Données Obligatoires", expanded=True):
         gdf = gpd.read_file(health_file)
         gdf = ensure_wgs84(gdf)
         if "health_area" not in gdf.columns:
-            st.error("❌ Colonne 'health_area' absente")
+            st.error(" Colonne 'health_area' absente")
         else:
             gdf["health_area"] = gdf["health_area"].astype(str).str.strip().str.lower()
             st.session_state.gdf_health = gdf
@@ -645,10 +645,10 @@ with st.sidebar.expander("📍 Données Obligatoires", expanded=True):
                     df = pd.read_csv(cases_file, sep=None, engine='python', encoding='latin-1')
                 st.warning("⚠️ Encodage Latin-1 utilisé")
             except Exception as e:
-                st.error(f"❌ Erreur de lecture : {str(e)}")
+                st.error(f" Erreur de lecture : {str(e)}")
                 df = None
         except Exception as e:
-            st.error(f"❌ Erreur : {str(e)}")
+            st.error(f" Erreur : {str(e)}")
             df = None
         
         if df is not None:
@@ -687,7 +687,7 @@ with st.sidebar.expander("📍 Données Obligatoires", expanded=True):
                     col3.metric("Aires uniques", df["health_area"].nunique())
             else:
                 missing = required - set(df.columns)
-                st.error(f"❌ Colonnes manquantes : {missing}")
+                st.error(f" Colonnes manquantes : {missing}")
                 st.error(f"📋 Colonnes trouvées : {list(df.columns)}")
 
 # === API CLIMAT - MULTIPLE SOURCES ===
@@ -777,7 +777,7 @@ with st.sidebar.expander("🌦️ API Climat (Optionnel)", expanded=False):
                         st.session_state.df_climate_aggregated = df_climate_agg
                         st.success(f"🎉 Données climatiques intégrées avec succès !")
                     else:
-                        st.error("❌ Aucune donnée climatique récupérée")
+                        st.error(" Aucune donnée climatique récupérée")
         else:
             st.warning("⚠️ Chargez d'abord les aires de santé et les cas")
 
@@ -1627,7 +1627,7 @@ with tab3:
                     }
                     
                 except Exception as e:
-                    st.error(f"❌ Erreur : {str(e)}")
+                    st.error(f" Erreur : {str(e)}")
                     import traceback
                     st.code(traceback.format_exc())
             
@@ -2652,26 +2652,26 @@ with tab6:
             <h3>⚠️ Erreurs Fréquentes à Éviter</h3>
             <h4>🔴 Données</h4>
             <ul>
-                <li>❌ Noms zones différents (carte: "Dakar" vs CSV: "DAKAR")</li>
-                <li>❌ Semaines non continues (S20, S22, S23... → manque S21)</li>
-                <li>❌ Dates/années incohérentes</li>
-                <li>❌ Valeurs négatives dans "cases"</li>
+                <li> Noms zones différents (carte: "Dakar" vs CSV: "DAKAR")</li>
+                <li> Semaines non continues (S20, S22, S23... → manque S21)</li>
+                <li> Dates/années incohérentes</li>
+                <li> Valeurs négatives dans "cases"</li>
             </ul>
                """, unsafe_allow_html=True)
             <h4> Modélisation</h4>
             <ul>
                 <li> Horizon trop long (>8 sem) sans expertise</li>
-                <li>❌ Ignorer R² CV (regarder que R² simple)</li>
-                <li>❌ Croire prédictions si R² CV < 0.50</li>
-                <li>❌ Ne pas mettre à jour régulièrement</li>
+                <li> Ignorer R² CV (regarder que R² simple)</li>
+                <li> Croire prédictions si R² CV < 0.50</li>
+                <li> Ne pas mettre à jour régulièrement</li>
             </ul>
             
             <h4>Interprétation</h4>
             <ul>
-                <li>❌ Décisions uniquement basées sur modèle</li>
-                <li>❌ Ignorer facteurs non mesurés (campagnes, ruptures stock...)</li>
-                <li>❌ Oublier que corrélation ≠ causalité</li>
-                <li>❌ Sur-confiance dans prédictions lointaines</li>
+                <li> Décisions uniquement basées sur modèle</li>
+                <li> Ignorer facteurs non mesurés (campagnes, ruptures stock...)</li>
+                <li> Oublier que corrélation ≠ causalité</li>
+                <li> Sur-confiance dans prédictions lointaines</li>
             </ul>
             </div>
             
@@ -2898,6 +2898,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
