@@ -29,7 +29,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import mean_absolute_error, mean_squared_error, R2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from branca.colormap import linear
 from PIL import Image
 from io import BytesIO
@@ -1538,7 +1538,7 @@ with tab3:
                     
                     # Validation croisée
                     tscv = TimeSeriesSplit(n_splits=5)
-                    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring=R2, n_jobs=-1)
+                    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring=r2, n_jobs=-1)
                     cv_mae = -cross_val_score(model, X, y, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
                     progress_bar.progress(85)
                     
@@ -1547,7 +1547,8 @@ with tab3:
                     df_model["predicted_cases"] = model.predict(X).clip(0).round().astype(int)
                     mae = mean_absolute_error(y, df_model["predicted_cases"])
                     rmse = np.sqrt(mean_squared_error(y, df_model["predicted_cases"]))
-                    R2 = R2_score(y, df_model["predicted_cases"])
+                    from sklearn.metrics import r2_score
+                    r2 = r2_score(y, df_model["predicted_cases"])
                     progress_bar.progress(90)
                     
                     # Prédictions futures
@@ -1622,7 +1623,7 @@ with tab3:
                     # Sauvegarder
                     st.session_state.model_results = {
                         'df_model': df_model, 'df_future': df_future,
-                        'metrics': {'mae': mae, 'rmse': rmse, R2: R2, 'cv_R2_mean': cv_scores.mean(), 'cv_R2_std': cv_scores.std()},
+                        'metrics': {'mae': mae, 'rmse': rmse, r2: r2, 'cv_r2_mean': cv_scores.mean(), 'cv_r2_std': cv_scores.std()},
                         'pca_info': pca_info, 'feature_cols': feature_cols
                     }
                     
@@ -1642,17 +1643,17 @@ with tab3:
                 col1, col2, col3, col4 = st.columns(4)
                 col1.metric("📉 MAE", f"{metrics['mae']:.2f}")
                 col2.metric("📊 RMSE", f"{metrics['rmse']:.2f}")
-                col3.metric("🎯 R2", f"{metrics['r2']:.3f}")
-                col4.metric("✅ R2 CV", f"{metrics['cv_R2_mean']:.3f}")
+                col3.metric("🎯 r2", f"{metrics['r2']:.3f}")
+                col4.metric("✅ r2 CV", f"{metrics['cv_r2_mean']:.3f}")
                 
                 # Interprétation
-                R2, cv_R2= metrics[R2], metrics['cv_R2_mean']
-                if R2 > 0.85 and cv_R2> 0.80:
-                    st.success(f"✅ **Excellent** : R2={R2:.3f}, CV={cv_R2:.3f} - Fiable pour décisions stratégiques")
-                elif R2 > 0.70 and cv_R2> 0.65:
-                    st.info(f"🟡 **Bon** : R2={R2:.3f}, CV={cv_R2:.3f} - OK pour alertes précoces")
+                r2, cv_r2= metrics[r2], metrics['cv_r2_mean']
+                if r2 > 0.85 and cv_r2> 0.80:
+                    st.success(f"✅ **Excellent** : r2={r2:.3f}, CV={cv_r2:.3f} - Fiable pour décisions stratégiques")
+                elif r2 > 0.70 and cv_r2> 0.65:
+                    st.info(f"🟡 **Bon** : r2={r2:.3f}, CV={cv_r2:.3f} - OK pour alertes précoces")
                 else:
-                    st.warning(f"⚠️ **Moyen** : R2={R2:.3f}, CV={cv_R2:.3f} - Activer climat / vérifier données")
+                    st.warning(f"⚠️ **Moyen** : r2={r2:.3f}, CV={cv_r2:.3f} - Activer climat / vérifier données")
                 
                 # Prédictions
                 st.markdown("### 🔮 Prédictions")
@@ -2236,7 +2237,7 @@ with tab6:
         <ul style="font-size:0.9rem;">
             <li>⏰ Time Series Split (5 folds)</li>
             <li>📊 Validation croisee</li>
-            <li>🎯 Metriques: R2, MAE, RMSE</li>
+            <li>🎯 Metriques: r2, MAE, RMSE</li>
             <li>📈 Moyenne plus/moins Ecart-type</li>
             <li>✅ Robustesse temporelle</li>
         </ul>
@@ -2473,21 +2474,21 @@ Lag_spatial = (0.50×50 + 0.20×30 + 0.33×40 + 0.10×20 + 0.25×60) / 1.38
 Donnees : Semaines 1 a 52
 
 Fold 1 :
-  Entrainement : S1-S30  →  Test : S31-S40  →  R2 = 0.82
+  Entrainement : S1-S30  →  Test : S31-S40  →  r2 = 0.82
 
 Fold 2 :
-  Entrainement : S1-S35  →  Test : S36-S44  →  R2 = 0.78
+  Entrainement : S1-S35  →  Test : S36-S44  →  r2 = 0.78
 
 Fold 3 :
-  Entrainement : S1-S40  →  Test : S41-S48  →  R2 = 0.85
+  Entrainement : S1-S40  →  Test : S41-S48  →  r2 = 0.85
 
 Fold 4 :
-  Entrainement : S1-S44  →  Test : S45-S50  →  R2 = 0.80
+  Entrainement : S1-S44  →  Test : S45-S50  →  r2 = 0.80
 
 Fold 5 :
-  Entrainement : S1-S48  →  Test : S49-S52  →  R2 = 0.83
+  Entrainement : S1-S48  →  Test : S49-S52  →  r2 = 0.83
 
-Performance finale : R2 = 0.82 +/- 0.03  ✅ (Robuste !)
+Performance finale : r2 = 0.82 +/- 0.03  ✅ (Robuste !)
     """, language=None)
     
     col1, col2 = st.columns(2)
@@ -2498,7 +2499,7 @@ Performance finale : R2 = 0.82 +/- 0.03  ✅ (Robuste !)
         <h4>✅ Avantages</h4>
         <ul>
             <li><b>Realiste</b> : Simule vraie utilisation (predire futur avec passe)</li>
-            <li><b>Detecte sur-apprentissage</b> : Si R2 entrainement >> R2 test</li>
+            <li><b>Detecte sur-apprentissage</b> : Si r2 entrainement >> r2 test</li>
             <li><b>Mesure robustesse</b> : Ecart-type faible = modele stable</li>
             <li><b>Compare algorithmes</b> : Choix objectif du meilleur</li>
         </ul>
@@ -2511,7 +2512,7 @@ Performance finale : R2 = 0.82 +/- 0.03  ✅ (Robuste !)
         <h4>📊 Interpretation Resultats</h4>
         <table style="width:100%; border-collapse:collapse;">
             <tr style="background:#f5f5f5;">
-                <th style="padding:0.5rem; border:1px solid #ddd;">Ecart-type R2</th>
+                <th style="padding:0.5rem; border:1px solid #ddd;">Ecart-type r2</th>
                 <th style="padding:0.5rem; border:1px solid #ddd;">Signification</th>
             </tr>
             <tr>
@@ -2764,6 +2765,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
