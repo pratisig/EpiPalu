@@ -1692,19 +1692,30 @@ with tab3:
                         df_ha = df_model[df_model["health_area"] == ha].sort_values("week_num")
                         history = df_ha['cases'].tail(8).tolist()
                         
-                        static_vals = {col: df_ha.iloc[-1][col] for col in static_env_cols + (['spatial_cluster'] if use_spatial else [])
-                                      if col in df_ha.columns and not pd.isna(df_ha.iloc[-1][col])}
-                        climate_vals = {col: df_ha.iloc[-1][col] for col in climate_features
-                                       if col in df_ha.columns and not pd.isna(df_ha.iloc[-1][col])}
+                        # Valeurs statiques
+                        static_vals = {
+                            col: df_ha.iloc[-1][col] 
+                            for col in static_env_cols + (['spatial_cluster'] if use_spatial else [])
+                            if col in df_ha.columns and not pd.isna(df_ha.iloc[-1][col])
+                        }
+                        
+                        # Valeurs climat
+                        climate_vals = {
+                            col: df_ha.iloc[-1][col] 
+                            for col in climate_features
+                            if col in df_ha.columns and not pd.isna(df_ha.iloc[-1][col])
+                        }
                         
                         for step in range(1, n_future_weeks + 1):
                             future_week = max_week + step
                             row = {"health_area": ha, "week_num": future_week}
                             
+                            # ===== ÉTAPE 1 : Saisonnalité =====
                             week_of_year = future_week % 52
                             row['sin_week'] = np.sin(2 * np.pi * week_of_year / 52)
                             row['cos_week'] = np.cos(2 * np.pi * week_of_year / 52)
                             
+                            # ===== ÉTAPE 2 : Features temporelles =====
                             if history:
                                 row['cases_lag_1'] = history[-1]
                                 if len(history) >= 2:
@@ -1715,36 +1726,69 @@ with tab3:
                                     row['cases_lag_4'] = history[-4]
                                     row['cases_ma_4'] = np.mean(history[-4:])
                             
+                            # ===== ÉTAPE 3 : Features statiques =====
                             row.update(static_vals)
+                            
+                            # ===== ÉTAPE 4 : Features climatiques =====
                             if climate_vals:
                                 seasonal_factor = 1 + 0.15 * row['sin_week']
                                 for var, val in climate_vals.items():
                                     row[var] = val * seasonal_factor
                             
+                            # ===== ÉTAPE 5 : Features spatiales =====
+                            # ✅ IMPORTANT : Créer spatial_lag ET cluster dummies AVANT tout
                             if use_spatial:
+                                # Spatial lag
                                 if 'spatial_lag' in feature_cols:
                                     row['spatial_lag'] = history[-1] if history else 0
+                                
+                                # Cluster dummies
                                 if 'spatial_cluster' in static_vals:
                                     for i in range(n_clusters):
                                         row[f'cluster_{i}'] = 1 if static_vals['spatial_cluster'] == i else 0
                             
+                            # ===== ÉTAPE 6 : Compléter features manquantes =====
+                            # Ajouter TOUTES les features attendues avec valeur 0 par défaut
                             for col in feature_cols:
                                 if col not in row:
                                     row[col] = 0
                             
+                            # ===== ÉTAPE 7 : Préparer input pour prédiction =====
                             if use_pca and pca_info:
-                                row_df = pd.DataFrame([row])[pca_info['feature_names']]
-                                row_imputed = pca_imputer.transform(row_df)
-                                row_scaled = pca_scaler.transform(row_imputed)
-                                row_pca = pca_model.transform(row_scaled)
-                                X_step = pd.DataFrame(row_pca, columns=[f'PC{i+1}' for i in range(pca_info['n_components'])])
+                                # Avec ACP : utiliser feature_names originales
+                                try:
+                                    row_df = pd.DataFrame([row])[pca_info['feature_names']]
+                                    row_imputed = pca_imputer.transform(row_df)
+                                    row_scaled = pca_scaler.transform(row_imputed)
+                                    row_pca = pca_model.transform(row_scaled)
+                                    X_step = pd.DataFrame(
+                                        row_pca, 
+                                        columns=[f'PC{i+1}' for i in range(pca_info['n_components'])]
+                                    )
+                                except KeyError as e:
+                                    # Si erreur, afficher diagnostic
+                                    missing_cols = [c for c in pca_info['feature_names'] if c not in row]
+                                    st.error(f"Colonnes manquantes pour ACP : {missing_cols}")
+                                    st.error(f"Colonnes disponibles : {list(row.keys())}")
+                                    raise
                             else:
-                                X_step = pd.DataFrame([row])[feature_cols]
+                                # Sans ACP : utiliser feature_cols directement
+                                try:
+                                    X_step = pd.DataFrame([row])[feature_cols]
+                                except KeyError as e:
+                                    missing_cols = [c for c in feature_cols if c not in row]
+                                    st.error(f"Colonnes manquantes : {missing_cols}")
+                                    st.error(f"Colonnes disponibles : {list(row.keys())}")
+                                    raise
                             
+                            # ===== ÉTAPE 8 : Prédiction =====
                             pred = max(0, round(model.predict(X_step)[0]))
+                            
+                            # Mise à jour historique
                             history.append(pred)
                             if len(history) > 8:
                                 history.pop(0)
+                            
                             row['predicted_cases'] = pred
                             future_rows.append(row)
                     
@@ -2852,6 +2896,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
