@@ -642,7 +642,7 @@ def calculate_spatial_lag(gdf, values, k_neighbors=5):
     
     return np.array(spatial_lag)
 
-def perform_pca_analysis_robust(df, feature_cols, explained_variance_threshold=0.95):
+def perform_pca_analysis(df, feature_cols, explained_variance_threshold=0.95):
     """
     Version robuste avec gestion d'erreur complète
     """
@@ -2852,6 +2852,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
