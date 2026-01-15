@@ -1832,7 +1832,7 @@ with tab3:
                 col4.metric("✅ r2 CV", f"{metrics['cv_r2_mean']:.3f}")
                 
                 # Interprétation
-                r2, cv_r2= metrics[r2], metrics['cv_r2_mean']
+                r2, cv_r2 = metrics['r2'], metrics['cv_r2_mean']
                 if r2 > 0.85 and cv_r2> 0.80:
                     st.success(f"✅ **Excellent** : r2={r2:.3f}, CV={cv_r2:.3f} - Fiable pour décisions stratégiques")
                 elif r2 > 0.70 and cv_r2> 0.65:
@@ -2905,6 +2905,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
