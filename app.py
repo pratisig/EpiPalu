@@ -32,6 +32,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from branca.colormap import linear
 from PIL import Image
+from scipy.spatial.distance import cdist
 from io import BytesIO
 import base64
 from shapely.geometry import Point
@@ -596,7 +597,88 @@ def add_raster_to_map(m, raster, name):
     colormap = cmap
     colormap.caption = name
     colormap.add_to(m)
+# ============================================================
+# FONCTIONS AVANCÉES POUR MODÉLISATION
+# ============================================================
 
+def create_spatial_clusters(gdf, n_clusters=5):
+    """
+    Clustering spatial des zones pour capturer hétérogénéité géographique
+    """
+    # Extraire centroides
+    centroids = np.array([[geom.centroid.x, geom.centroid.y] for geom in gdf.geometry])
+    
+    # K-means clustering
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+    clusters = kmeans.fit_predict(centroids)
+    
+    return clusters, kmeans
+
+def calculate_spatial_lag(gdf, values, k_neighbors=5):
+    """
+    Calcule le lag spatial (influence des zones voisines)
+    """
+    from scipy.spatial.distance import cdist
+    
+    # Extraire centroides
+    centroids = np.array([[geom.centroid.x, geom.centroid.y] for geom in gdf.geometry])
+    
+    # Matrice de distances
+    dist_matrix = cdist(centroids, centroids, metric='euclidean')
+    
+    # Pour chaque zone, moyenne pondérée des k plus proches voisins
+    spatial_lag = []
+    for i in range(len(gdf)):
+        # Indices des k plus proches (excluant soi-même)
+        neighbors_idx = np.argsort(dist_matrix[i])[1:k_neighbors+1]
+        
+        # Distances inverses comme poids
+        weights = 1 / (dist_matrix[i, neighbors_idx] + 1e-6)
+        weights = weights / weights.sum()
+        
+        # Moyenne pondérée
+        lag_value = np.sum(values.iloc[neighbors_idx] * weights)
+        spatial_lag.append(lag_value)
+    
+    return np.array(spatial_lag)
+
+def perform_pca_analysis(df, feature_cols, n_components=None, explained_variance_threshold=0.95):
+    """
+    Analyse en Composantes Principales (ACP) pour réduction dimensionnelle
+    """
+    # Préparer données
+    X = df[feature_cols].copy().replace([np.inf, -np.inf], np.nan)
+    
+    # Imputation
+    imputer = SimpleImputer(strategy='mean')
+    X_imputed = imputer.fit_transform(X)
+    
+    # Standardisation (essentiel pour ACP)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X_imputed)
+    
+    # Déterminer nombre de composantes
+    if n_components is None:
+        pca_full = PCA()
+        pca_full.fit(X_scaled)
+        cumsum = np.cumsum(pca_full.explained_variance_ratio_)
+        n_components = np.argmax(cumsum >= explained_variance_threshold) + 1
+    
+    # ACP finale
+    pca = PCA(n_components=n_components)
+    X_pca = pca.fit_transform(X_scaled)
+    
+    # Créer DataFrame avec composantes principales
+    pca_cols = [f'PC{i+1}' for i in range(n_components)]
+    df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df.index)
+    
+    return df_pca, pca, scaler, imputer, {
+        'explained_variance': pca.explained_variance_ratio_,
+        'cumulative_variance': np.cumsum(pca.explained_variance_ratio_),
+        'components': pca.components_,
+        'n_components': n_components,
+        'feature_names': feature_cols
+    }
 # ============================================================
 # SIDEBAR – CHARGEMENT DES DONNÉES
 # ============================================================
@@ -1538,7 +1620,7 @@ with tab3:
                     
                     # Validation croisée
                     tscv = TimeSeriesSplit(n_splits=5)
-                    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring=r2, n_jobs=-1)
+                    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring='r2', n_jobs=-1)
                     cv_mae = -cross_val_score(model, X, y, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
                     progress_bar.progress(85)
                     
@@ -1676,7 +1758,33 @@ with tab3:
                 )
                 fig.update_layout(height=600)
                 st.plotly_chart(fig, use_container_width=True)
+                # Après la heatmap (ligne ~1580)
+                st.markdown("---")
+                st.markdown("### 🚨 Zones à Risque Élevé")
                 
+                # Calculer seuil
+                alert_threshold = 75  # Vous pouvez le remettre en slider si besoin
+                threshold_value = df_future['predicted_cases'].quantile(alert_threshold / 100)
+                
+                # Filtrer zones à risque
+                df_alerts = df_future[df_future['predicted_cases'] > threshold_value].copy()
+                df_alerts = df_alerts.groupby('health_area')['predicted_cases'].sum().sort_values(ascending=False)
+                
+                if not df_alerts.empty:
+                    col1, col2 = st.columns([2, 1])
+                    
+                    with col1:
+                        st.dataframe(
+                            df_alerts.reset_index().rename(columns={'health_area': 'Aire de Santé', 'predicted_cases': 'Cas Totaux Prévus'}),
+                            use_container_width=True
+                        )
+                    
+                    with col2:
+                        st.metric("🚨 Zones à Risque", len(df_alerts))
+                        st.metric("📊 Seuil", f"{threshold_value:.0f} cas")
+                        st.info(f"Alertes pour le top {alert_threshold}% des prédictions")
+                else:
+                    st.success("✅ Aucune zone au-dessus du seuil d'alerte")               
 # ============================================================
 # TAB 4 – ANALYSE AVANCÉE (VERSION CORRIGÉE)
 # ============================================================
@@ -2694,6 +2802,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
