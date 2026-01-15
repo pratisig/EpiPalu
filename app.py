@@ -2658,21 +2658,26 @@ st.markdown("---")
 # ========================================
 # SECTION SUPPORT
 # ========================================
+
 st.markdown("""
 <div class="section-card">
     <h2 style="margin:0; color:white; text-align:center;">📞 Besoin d'aide ?</h2>
     <br>
     <div style="text-align:center; font-size:1.1rem;">
         <p><b>Contact Support Technique</b></p>
-        <p>📧 Email : <a href="mailto:youssoupha.mbodji@example.com" style="color:#FFD700;">youssoupha.mbodji@example.com</a></p>
+        <p>📧 Email : <a href="mailto:youssoupha.mbodji@example.com" style="color:#FFD700;">
+            youssoupha.mbodji@example.com</a></p>
+        <p>💬 Questions fréquentes : <a href="#" style="color:#FFD700;">FAQ (à venir)</a></p>
+        <p>📖 Documentation complète : <a href="#" style="color:#FFD700;">Manuel utilisateur</a></p>
     </div>
     <br>
     <p style="text-align:center; font-size:0.9rem; opacity:0.9;">
-        Version 3.1 - Modelisation Avancee | Developpe par <b>Youssoupha MBODJI</b><br>
-        Annee 2025 - Licence Open Source MIT
+        Version 3.1 - Modélisation Avancée | Développé par <b>Youssoupha MBODJI</b><br>
+        Année 2025 - Licence Open Source MIT
     </p>
 </div>
 """, unsafe_allow_html=True)
+
     
     # ========================================
     # SECTION 7 : SUPPORT ET CONTACT
@@ -2713,6 +2718,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
