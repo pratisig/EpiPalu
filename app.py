@@ -1885,7 +1885,7 @@ with tab3:
                     with col2:
                         st.metric("🚨 Zones à Risque", len(df_alerts))
                         st.metric("📊 Seuil", f"{threshold_value:.0f} cas")
-                        st.info(f"Alertes pour le top {alert_threshold}% des prédictions")
+                        st.info(f"Alertes pour le top {100 - alert_threshold}% des prédictions (au-dessus du {alert_threshold}e percentile)")
                 else:
                     st.success("✅ Aucune zone au-dessus du seuil d'alerte")               
 # ============================================================
@@ -2905,6 +2905,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
