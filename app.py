@@ -1439,7 +1439,9 @@ with tab3:
                 horizontal=True,
                 help="Simple : Optimisé auto | Expert : Contrôle total"
             )
-        
+            # Avec les autres sliders
+            alert_threshold = st.slider("🚨 Seuil alerte (%)", 50, 95, 75, 
+                                        help="Top X% des prédictions considérées à risque")
         with col_conf2:
             st.markdown("#### 📊 État")
             st.info(f"""
@@ -2802,6 +2804,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
