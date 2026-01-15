@@ -642,43 +642,91 @@ def calculate_spatial_lag(gdf, values, k_neighbors=5):
     
     return np.array(spatial_lag)
 
-def perform_pca_analysis(df, feature_cols, n_components=None, explained_variance_threshold=0.95):
+def perform_pca_analysis_robust(df, feature_cols, explained_variance_threshold=0.95):
     """
-    Analyse en Composantes Principales (ACP) pour réduction dimensionnelle
+    Version robuste avec gestion d'erreur complète
     """
-    # Préparer données
-    X = df[feature_cols].copy().replace([np.inf, -np.inf], np.nan)
-    
-    # Imputation
-    imputer = SimpleImputer(strategy='mean')
-    X_imputed = imputer.fit_transform(X)
-    
-    # Standardisation (essentiel pour ACP)
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_imputed)
-    
-    # Déterminer nombre de composantes
-    if n_components is None:
+    try:
+        # Validation des entrées
+        if not isinstance(explained_variance_threshold, (int, float)):
+            raise ValueError(f"explained_variance_threshold doit être un nombre, reçu: {type(explained_variance_threshold)}")
+        
+        if not 0 < explained_variance_threshold <= 1:
+            raise ValueError(f"explained_variance_threshold doit être entre 0 et 1, reçu: {explained_variance_threshold}")
+        
+        if len(feature_cols) < 2:
+            raise ValueError(f"Au moins 2 features nécessaires pour ACP, reçu: {len(feature_cols)}")
+        
+        # Préparer données
+        X = df[feature_cols].copy().replace([np.inf, -np.inf], np.nan)
+        
+        # Vérifier s'il y a des données
+        if X.isnull().all().all():
+            raise ValueError("Toutes les valeurs sont NaN après nettoyage")
+        
+        # Imputation
+        imputer = SimpleImputer(strategy='mean')
+        X_imputed = imputer.fit_transform(X)
+        
+        # Standardisation
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X_imputed)
+        
+        # ACP complète pour analyse
         pca_full = PCA()
         pca_full.fit(X_scaled)
-        cumsum = np.cumsum(pca_full.explained_variance_ratio_)
-        n_components = np.argmax(cumsum >= explained_variance_threshold) + 1
+        
+        # Calculer variance cumulée
+        cumsum_variance = np.cumsum(pca_full.explained_variance_ratio_)
+        
+        # Trouver nombre de composantes
+        n_components_idx = np.argmax(cumsum_variance >= explained_variance_threshold)
+        n_components = int(n_components_idx + 1)
+        
+        # Contraintes de sécurité
+        n_components = max(1, min(n_components, len(feature_cols), X_scaled.shape[0] - 1))
+        
+        # ACP finale
+        pca = PCA(n_components=n_components)
+        X_pca = pca.fit_transform(X_scaled)
+        
+        # DataFrame résultat
+        pca_cols = [f'PC{i+1}' for i in range(n_components)]
+        df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df.index)
+        
+        # Informations
+        pca_info = {
+            'explained_variance': pca.explained_variance_ratio_,
+            'cumulative_variance': np.cumsum(pca.explained_variance_ratio_),
+            'components': pca.components_,
+            'n_components': n_components,
+            'feature_names': feature_cols,
+            'total_variance_explained': float(cumsum_variance[n_components - 1])
+        }
+        
+        return df_pca, pca, scaler, imputer, pca_info
     
-    # ACP finale
-    pca = PCA(n_components=n_components)
-    X_pca = pca.fit_transform(X_scaled)
-    
-    # Créer DataFrame avec composantes principales
-    pca_cols = [f'PC{i+1}' for i in range(n_components)]
-    df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df.index)
-    
-    return df_pca, pca, scaler, imputer, {
-        'explained_variance': pca.explained_variance_ratio_,
-        'cumulative_variance': np.cumsum(pca.explained_variance_ratio_),
-        'components': pca.components_,
-        'n_components': n_components,
-        'feature_names': feature_cols
-    }
+    except Exception as e:
+        # En cas d'erreur, retourner les données originales sans ACP
+        import warnings
+        warnings.warn(f"Erreur lors de l'ACP: {str(e)}. Retour données originales.")
+        
+        # Retour fallback
+        X_fallback = df[feature_cols].copy().fillna(0)
+        imputer = SimpleImputer(strategy='mean')
+        X_imputed = imputer.fit_transform(X_fallback)
+        
+        pca_info = {
+            'explained_variance': np.array([1.0]),
+            'cumulative_variance': np.array([1.0]),
+            'components': np.eye(len(feature_cols)),
+            'n_components': len(feature_cols),
+            'feature_names': feature_cols,
+            'error': str(e)
+        }
+        
+        return pd.DataFrame(X_imputed, columns=feature_cols, index=df.index), None, None, imputer, pca_info
+
 # ============================================================
 # SIDEBAR – CHARGEMENT DES DONNÉES
 # ============================================================
@@ -2804,6 +2852,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
