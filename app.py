@@ -1755,7 +1755,7 @@ with tab3:
                     # Sauvegarder
                     st.session_state.model_results = {
                         'df_model': df_model, 'df_future': df_future,
-                        'metrics': {'mae': mae, 'rmse': rmse, r2: r2, 'cv_r2_mean': cv_scores.mean(), 'cv_r2_std': cv_scores.std()},
+                        'metrics': {'mae': mae, 'rmse': rmse, 'r2': r2, 'cv_r2_mean': cv_scores.mean(), 'cv_r2_std': cv_scores.std()},
                         'pca_info': pca_info, 'feature_cols': feature_cols
                     }
                     
@@ -2852,6 +2852,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
