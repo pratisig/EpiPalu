@@ -1086,21 +1086,6 @@ else:
     # extraction WorldPop normale (déjà effectuée ci-dessus)
     population_mean = df_population["Pop_Totale"].sum() if "Pop_Totale" in df_population.columns else np.nan
 
-
-
-# Fonction d'extraction WorldPop (à définir au début du fichier)
-
-    """
-    Extrait population totale + enfants 0-14 ans pour modélisation paludisme
-    """
-    if not use_gee:
-        return pd.DataFrame({
-            "health_area": _sa_gdf["health_area"],
-            "Pop_Totale": [np.nan] * len(_sa_gdf),
-            "Pop_Enfants_0_14": [np.nan] * len(_sa_gdf),
-            "Densite_Pop": [np.nan] * len(_sa_gdf)
-        })
-    
     try:
         dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
         pop_img = dataset.mosaic()
@@ -3229,6 +3214,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
