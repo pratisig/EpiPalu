@@ -947,44 +947,147 @@ with st.sidebar.expander("🌍 Données Environnementales", expanded=False):
 
 # ÉTAPE 1: Extraire les données de population (autour ligne 450-500)
 # ============================================================
+# -------------------------
 # Initialisation Google Earth Engine (Streamlit Cloud)
+# -------------------------
 @st.cache_resource
 def init_gee():
     try:
         import ee
 
-        if not ee.data._credentials:
+        # Si pas de credentials en mémoire, utiliser les secrets du déploiement
+        try:
+            # si la bibliothèque expose ee.data._credentials cela peut être utilisé,
+            # sinon on essaie d'initialiser explicitement avec la clé de service.
+            if not ee.data._credentials:
+                ee.Initialize(
+                    ee.ServiceAccountCredentials(
+                        st.secrets["gee"]["client_email"],
+                        key_data=st.secrets["gee"]["private_key"]
+                    )
+                )
+            else:
+                ee.Initialize()
+        except Exception:
+            # fallback : tenter une initialisation explicite
             ee.Initialize(
                 ee.ServiceAccountCredentials(
                     st.secrets["gee"]["client_email"],
                     key_data=st.secrets["gee"]["private_key"]
                 )
             )
-        else:
-            ee.Initialize()
 
         return True
 
     except Exception as e:
+        # Affiche l'erreur mais retourne False pour que l'app continue proprement
         st.error(f"❌ GEE non initialisé : {e}")
         return False
-@st.cache_data
-def worldpop_malaria_stats(_sa_gdf, use_gee):
+
+# Appel immédiat — variable globale utilisée ensuite
 use_gee = init_gee()
 
-    
+
+# -------------------------
+# Fonction d'extraction WorldPop (définie AVANT son usage)
+# -------------------------
+@st.cache_data
+def worldpop_malaria_stats(_sa_gdf, use_gee):
+    """
+    Extrait population totale pour chaque géométrie (WorldPop).
+    Si use_gee == False, retourne un DataFrame avec NaN (sécurité pour le déploiement).
+    NOTE: cette fonction est volontairement conservative (getInfo dans try/except).
+    """
+    # Si GEE absent, renvoyer NaN pour toutes les colonnes attendues
+    if not use_gee:
+        return pd.DataFrame({
+            "health_area": _sa_gdf["health_area"].values,
+            "Pop_Totale": [np.nan] * len(_sa_gdf),
+            "Pop_Enfants_0_14": [np.nan] * len(_sa_gdf),
+            "Densite_Pop": [np.nan] * len(_sa_gdf)
+        })
+
+    try:
+        import ee
+        # Collection WorldPop (GP 100m pop_age_sex) - on essaie d'utiliser la couche la plus générale
+        collection = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
+        pop_img = collection.mosaic()  # mosaïc pour obtenir une image continue
+
+        results = []
+        for idx, row in _sa_gdf.iterrows():
+            try:
+                geom_geojson = row.geometry.__geo_interface__
+                ee_geom = ee.Geometry(geom_geojson)
+
+                # on tente de récupérer la somme de la population dans la géométrie
+                stat = pop_img.reduceRegion(
+                    reducer=ee.Reducer.sum(),
+                    geometry=ee_geom,
+                    scale=100,
+                    maxPixels=1e13
+                )
+
+                # Tentative d'accès à la première bande disponible
+                band_names = pop_img.bandNames().getInfo()
+                if band_names and len(band_names) > 0:
+                    band = band_names[0]
+                    val = stat.get(band)
+                    if val is None:
+                        pop_total = np.nan
+                    else:
+                        # getInfo() peut lever une exception si la requête échoue
+                        pop_total = float(val.getInfo())
+                else:
+                    pop_total = np.nan
+
+            except Exception:
+                pop_total = np.nan
+
+            results.append(pop_total)
+
+        df_out = pd.DataFrame({
+            "health_area": _sa_gdf["health_area"].values,
+            "Pop_Totale": results
+        })
+
+        # Colonne enfants et densité laissées vides ici (si besoin, on peut étendre la logique)
+        df_out["Pop_Enfants_0_14"] = np.nan
+        # Densité : population / surface(km2)
+        areas_km2 = _sa_gdf.geometry.to_crs(epsg=3395).area / 1e6  # approx area in km2
+        df_out["Densite_Pop"] = df_out["Pop_Totale"] / areas_km2.replace({0: np.nan})
+
+        return df_out
+
+    except Exception as e:
+        # En cas d'erreur GEE runtime, renvoyer NaN et logguer
+        st.warning(f"⚠️ Erreur lors de l'extraction WorldPop : {e}")
+        return pd.DataFrame({
+            "health_area": _sa_gdf["health_area"].values,
+            "Pop_Totale": [np.nan] * len(_sa_gdf),
+            "Pop_Enfants_0_14": [np.nan] * len(_sa_gdf),
+            "Densite_Pop": [np.nan] * len(_sa_gdf)
+        })
+
+
+# -------------------------
+# UTILISATION — affichage progression + appel
+# -------------------------
 status = st.empty()
 status.text("📥 5/7 Extraction population WorldPop...")
 
 progressbar = st.progress(0)
 progressbar.progress(55)
 
+# Appel sécurisé — use_gee (True/False) vient de init_gee()
 df_population = worldpop_malaria_stats(gdf_env, use_gee)
+
 if not use_gee:
     status.error("✗ GEE déconnecté → WorldPop NaN")
     population_mean = np.nan
 else:
-    pass # extraction WorldPop normale
+    # extraction WorldPop normale (déjà effectuée ci-dessus)
+    population_mean = df_population["Pop_Totale"].sum() if "Pop_Totale" in df_population.columns else np.nan
+
 
 
 # Fonction d'extraction WorldPop (à définir au début du fichier)
@@ -3128,6 +3231,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
