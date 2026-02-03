@@ -949,35 +949,38 @@ with st.sidebar.expander("🌍 Données Environnementales", expanded=False):
 # ============================================================
 # Initialisation Google Earth Engine (Streamlit Cloud)
 @st.cache_resource
-def init_gee():
-    try:
-        key_dict = json.loads(st.secrets["GEE_SERVICE_ACCOUNT"])
-        credentials = ee.ServiceAccountCredentials(
-            key_dict["client_email"],
-            key_data=json.dumps(key_dict)
-        )
-        ee.Initialize(credentials)
-        return True
-    except:
-        try:
-            ee.Initialize()
-            return True
-        except:
-            return False
+try:
+    import ee
 
-gee_ok = init_gee()
-if gee_ok:
-    st.sidebar.success("✓ GEE connecté")
-    use_gee = True
-else:
-    st.sidebar.error("✗ GEE déconnecté → WorldPop NaN")
-    use_gee = False
+    if not ee.data._credentials:
+        ee.Initialize(
+            ee.ServiceAccountCredentials(
+                st.secrets["gee"]["client_email"],
+                key_data=st.secrets["gee"]["private_key"]
+            )
+        )
+    else:
+        ee.Initialize()
+
+    gee_connected = True
+
+except Exception as e:
+    gee_connected = False
+    st.error(f"❌ GEE non initialisé : {e}")
+
     
 status = st.empty()
 status.text("📥 5/7 Extraction population WorldPop...")
+
+progressbar = st.progress(0)
 progressbar.progress(55)
 
 df_population = worldpop_malaria_stats(gdf_env, use_gee)
+if not gee_connected:
+    status.error("✗ GEE déconnecté → WorldPop NaN")
+    population_mean = np.nan
+else:
+    # extraction WorldPop normale
 
 
 # Fonction d'extraction WorldPop (à définir au début du fichier)
@@ -3122,6 +3125,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
