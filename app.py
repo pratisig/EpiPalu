@@ -957,7 +957,6 @@ def init_gee():
     try:
         import ee
 
-        # Tentative 1 : credentials déjà en mémoire
         try:
             if hasattr(ee.data, "_credentials") and ee.data._credentials:
                 ee.Initialize()
@@ -969,7 +968,6 @@ def init_gee():
                     )
                 )
         except Exception:
-            # Fallback explicite (sécurité Streamlit Cloud)
             ee.Initialize(
                 ee.ServiceAccountCredentials(
                     st.secrets["gee"]["client_email"],
@@ -984,195 +982,104 @@ def init_gee():
         return False
 
 
-# Appel immédiat — variable globale utilisée ensuite
+# Flag global harmonisé
 use_gee = init_gee()
 
 
 # -------------------------
-# Fonction d'extraction WorldPop
+# Fonction WorldPop UNIQUE
 # -------------------------
 @st.cache_data
 def worldpop_malaria_stats(_sa_gdf, use_gee):
     """
-    Extrait population totale pour chaque géométrie (WorldPop).
-    Si use_gee == False, retourne un DataFrame avec NaN.
+    Extrait population totale, enfants 0–14 ans et densité (WorldPop).
+    Retourne NaN si GEE indisponible.
     """
 
-    # Sécurité absolue si GEE indisponible
     if not use_gee:
         return pd.DataFrame({
             "health_area": _sa_gdf["health_area"].values,
-            "Pop_Totale": [np.nan] * len(_sa_gdf),
-            "Pop_Enfants_0_14": [np.nan] * len(_sa_gdf),
-            "Densite_Pop": [np.nan] * len(_sa_gdf)
+            "Pop_Totale": np.nan,
+            "Pop_Enfants_0_14": np.nan,
+            "Densite_Pop": np.nan
         })
 
     try:
         import ee
+        import shapely.geometry
 
-        # WorldPop GP 100m
-        collection = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
-        pop_img = collection.mosaic()
+        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
+        pop_img = dataset.mosaic()
 
-        results = []
+        # Bandes enfants
+        male_bands = ["M_0", "M_1", "M_5", "M_10"]
+        female_bands = ["F_0", "F_1", "F_5", "F_10"]
 
-        for _, row in _sa_gdf.iterrows():
-            try:
-                ee_geom = ee.Geometry(row.geometry.__geo_interface__)
-
-                stat = pop_img.reduceRegion(
-                    reducer=ee.Reducer.sum(),
-                    geometry=ee_geom,
-                    scale=100,
-                    maxPixels=1e13
-                )
-
-                band_names = pop_img.bandNames().getInfo()
-                if band_names:
-                    val = stat.get(band_names[0])
-                    pop_total = float(val.getInfo()) if val else np.nan
-                else:
-                    pop_total = np.nan
-
-            except Exception:
-                pop_total = np.nan
-
-            results.append(pop_total)
-
-        df_out = pd.DataFrame({
-            "health_area": _sa_gdf["health_area"].values,
-            "Pop_Totale": results
-        })
-
-        # Colonnes complémentaires (harmonisation)
-        df_out["Pop_Enfants_0_14"] = np.nan
-
-        # Densité (hab/km²)
-        areas_km2 = (
-            _sa_gdf.geometry
-            .to_crs(epsg=3395)
-            .area
-            .replace(0, np.nan) / 1e6
+        enfants_img = (
+            pop_img.select(male_bands).reduce(ee.Reducer.sum())
+            .add(pop_img.select(female_bands).reduce(ee.Reducer.sum()))
+            .rename("enfants")
         )
-        df_out["Densite_Pop"] = df_out["Pop_Totale"] / areas_km2.values
 
-        return df_out
+        total_img = pop_img.select(["population"])
+
+        pixel_area = ee.Image.pixelArea().divide(1e6)  # km²
+        total_count = total_img.multiply(pixel_area)
+        enfants_count = enfants_img.multiply(pixel_area)
+
+        features = []
+        for _, row in _sa_gdf.iterrows():
+            geom = ee.Geometry(row.geometry.__geo_interface__)
+            features.append(ee.Feature(geom, {"health_area": row["health_area"]}))
+
+        fc = ee.FeatureCollection(features)
+
+        stats = ee.Image.cat([total_count, enfants_count]).reduceRegions(
+            collection=fc,
+            reducer=ee.Reducer.sum(),
+            scale=100
+        ).getInfo()
+
+        data = []
+        for f in stats["features"]:
+            props = f["properties"]
+            geom = shapely.geometry.shape(f["geometry"])
+            area_km2 = geom.area * 111 * 111
+
+            pop = props.get("population", np.nan)
+            enfants = props.get("enfants", np.nan)
+
+            data.append({
+                "health_area": props["health_area"],
+                "Pop_Totale": pop,
+                "Pop_Enfants_0_14": enfants,
+                "Densite_Pop": pop / area_km2 if area_km2 > 0 else np.nan
+            })
+
+        return pd.DataFrame(data)
 
     except Exception as e:
-        st.warning(f"⚠️ Erreur WorldPop : {e}")
+        st.warning(f"⚠️ WorldPop erreur : {e}")
         return pd.DataFrame({
             "health_area": _sa_gdf["health_area"].values,
-            "Pop_Totale": [np.nan] * len(_sa_gdf),
-            "Pop_Enfants_0_14": [np.nan] * len(_sa_gdf),
-            "Densite_Pop": [np.nan] * len(_sa_gdf)
+            "Pop_Totale": np.nan,
+            "Pop_Enfants_0_14": np.nan,
+            "Densite_Pop": np.nan
         })
 
+
 # -------------------------
-# UTILISATION — affichage progression + appel
+# UTILISATION
 # -------------------------
 status = st.empty()
 status.text("📥 5/7 Extraction population WorldPop...")
 
-progressbar = st.progress(0)
-progressbar.progress(55)
+progressbar = st.progress(55)
 
-# Appel sécurisé — use_gee (True/False) vient de init_gee()
 df_population = worldpop_malaria_stats(gdf_env, use_gee)
 
 if not use_gee:
     status.error("✗ GEE déconnecté → WorldPop NaN")
-    population_mean = np.nan
-else:
-    # extraction WorldPop normale (déjà effectuée ci-dessus)
-    population_mean = df_population["Pop_Totale"].sum() if "Pop_Totale" in df_population.columns else np.nan
-
-    try:
-        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
-        pop_img = dataset.mosaic()
-        
-        # Bandes enfants (0-14 ans)
-        male_bands = ["M_0", "M_1", "M_5", "M_10"]
-        female_bands = ["F_0", "F_1", "F_5", "F_10"]
-        
-        selected_males = pop_img.select(male_bands)
-        selected_females = pop_img.select(female_bands)
-        total_pop = pop_img.select(['population'])
-        
-        # Sommes
-        males_sum = selected_males.reduce(ee.Reducer.sum()).rename('garcons')
-        females_sum = selected_females.reduce(ee.Reducer.sum()).rename('filles')
-        enfants = males_sum.add(females_sum).rename('enfants')
-        
-        # Mosaïque finale
-        final_mosaic = (total_pop
-                       .addBands(males_sum)
-                       .addBands(females_sum)
-                       .addBands(enfants))
-        
-        # Conversion densité → compte absolu (personnes/hectare → personnes)
-        pixel_area = ee.Image.pixelArea().divide(10000)  # m² → hectares
-        final_mosaic_count = final_mosaic.multiply(pixel_area)
-        
-        # Conversion géométries
-        features = []
-        for idx, row in _sa_gdf.iterrows():
-            geom = row['geometry']
-            props = {"health_area": row["health_area"]}
-            
-            if geom.geom_type == 'Polygon':
-                coords = [[[x, y] for x, y in geom.exterior.coords]]
-                ee_geom = ee.Geometry.Polygon(coords)
-            elif geom.geom_type == 'MultiPolygon':
-                coords = []
-                for poly in geom.geoms:
-                    coords.append([[[x, y] for x, y in poly.exterior.coords]])
-                ee_geom = ee.Geometry.MultiPolygon(coords)
-            else:
-                continue
-            
-            features.append(ee.Feature(ee_geom, props))
-        
-        fc = ee.FeatureCollection(features)
-        
-        # Calcul statistiques zonales
-        stats = final_mosaic_count.reduceRegions(
-            collection=fc,
-            reducer=ee.Reducer.sum(),
-            scale=100,
-            crs='EPSG:4326'
-        )
-        
-        stats_info = stats.getInfo()
-        
-        data_list = []
-        for feat in stats_info['features']:
-            props = feat['properties']
-            
-            pop_totale = props.get("population", 0)
-            enfants_total = props.get("enfants", 0)
-            
-            # Calcul densité (personnes par km²)
-            # Utiliser la superficie de la zone
-            area_km2 = shapely.geometry.shape(feat['geometry']).area * 111 * 111  # deg² → km²
-            densite = pop_totale / area_km2 if area_km2 > 0 else 0
-            
-            data_list.append({
-                "health_area": props.get("health_area", ""),
-                "Pop_Totale": int(pop_totale) if pop_totale > 0 else np.nan,
-                "Pop_Enfants_0_14": int(enfants_total) if enfants_total > 0 else np.nan,
-                "Densite_Pop": round(densite, 2)
-            })
-        
-        return pd.DataFrame(data_list)
-        
-    except Exception as e:
-        st.sidebar.error(f"❌ WorldPop : {str(e)}")
-        return pd.DataFrame({
-            "health_area": _sa_gdf["health_area"],
-            "Pop_Totale": [np.nan] * len(_sa_gdf),
-            "Pop_Enfants_0_14": [np.nan] * len(_sa_gdf),
-            "Densite_Pop": [np.nan] * len(_sa_gdf)
-        })
 
 
 # ============================================================
@@ -3214,6 +3121,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
