@@ -955,31 +955,23 @@ with st.sidebar.expander("🌍 Données Environnementales", expanded=False):
 @st.cache_resource
 def init_gee():
     try:
-        import ee
-
-        try:
-            if hasattr(ee.data, "_credentials") and ee.data._credentials:
-                ee.Initialize()
-            else:
-                ee.Initialize(
-                    ee.ServiceAccountCredentials(
-                        st.secrets["gee"]["client_email"],
-                        key_data=st.secrets["gee"]["private_key"]
-                    )
-                )
-        except Exception:
-            ee.Initialize(
-                ee.ServiceAccountCredentials(
-                    st.secrets["gee"]["client_email"],
-                    key_data=st.secrets["gee"]["private_key"]
-                )
-            )
-
+        key_dict = json.loads(st.secrets["GEE_SERVICE_ACCOUNT"])
+        credentials = ee.ServiceAccountCredentials(
+            key_dict["client_email"],
+            key_data=json.dumps(key_dict)
+        )
+        ee.Initialize(credentials)
         return True
+    except:
+        try:
+            ee.Initialize()
+            return True
+        except:
+            return False
 
-    except Exception as e:
-        st.error(f"❌ GEE non initialisé : {e}")
-        return False
+gee_ok = init_gee()
+if gee_ok:
+    st.sidebar.success("✓ GEE connecté")
 
 
 # Flag global harmonisé
@@ -3121,6 +3113,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
