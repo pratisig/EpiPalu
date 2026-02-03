@@ -967,6 +967,36 @@ with st.sidebar.expander("🌍 Données Environnementales", expanded=False):
 
 # ÉTAPE 1: Extraire les données de population (autour ligne 450-500)
 # ============================================================
+# Initialisation Google Earth Engine (Streamlit Cloud)
+@st.cache_resource
+def init_gee():
+    try:
+        key_dict = json.loads(st.secrets["GEE_SERVICE_ACCOUNT"])
+        credentials = ee.ServiceAccountCredentials(
+            key_dict["client_email"],
+            key_data=json.dumps(key_dict)
+        )
+        ee.Initialize(credentials)
+        return True
+    except:
+        try:
+            ee.Initialize()
+            return True
+        except:
+            return False
+
+gee_ok = init_gee()
+if gee_ok:
+    st.sidebar.success("✓ GEE connecté")
+    use_gee = True
+else:
+    st.sidebar.error("✗ GEE déconnecté → WorldPop NaN")
+    use_gee = False
+
+status.text("📥 5/7 Extraction population WorldPop...")
+progressbar.progress(55)
+
+df_population = worldpop_malaria_stats(gdf_env, use_gee)
 
 status.text("📥 5/7 Extraction population WorldPop...")
 progressbar.progress(55)
@@ -3113,6 +3143,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
