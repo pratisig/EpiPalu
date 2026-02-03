@@ -1068,7 +1068,15 @@ status.text("📥 5/7 Extraction population WorldPop...")
 
 progressbar = st.progress(55)
 
-df_population = worldpop_malaria_stats(gdf_env, use_gee)
+# Récupérer le bon GeoDataFrame
+gdfhealth = st.session_state.gdfhealth
+
+if gdfhealth is None:
+    st.warning("⚠️ Veuillez charger les aires de santé d'abord")
+    dfpopulation = pd.DataFrame()
+else:
+    dfpopulation = (gdfhealth, use_gee)
+
 
 if not use_gee:
     status.error("✗ GEE déconnecté → WorldPop NaN")
@@ -3113,6 +3121,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
