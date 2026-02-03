@@ -505,6 +505,28 @@ def create_environmental_features(gdf_map):
         )
     
     return gdf_map
+def create_population_features(df):
+    """
+    Crée des features dérivées de population pour la modélisation
+    """
+    df = df.copy()
+
+    # Taux d'incidence (cas pour 10 000 hab)
+    if "Pop_Totale" in df.columns:
+        df["incidence_rate"] = (df["cases"] / df["Pop_Totale"] * 10000)
+        df["incidence_rate"] = df["incidence_rate"].replace([np.inf, -np.inf], np.nan).fillna(0)
+
+    # Risque enfants (cas pour 1 000 enfants 0-14 ans)
+    if "Pop_Enfants_0_14" in df.columns:
+        df["child_risk"] = (df["cases"] / df["Pop_Enfants_0_14"] * 1000)
+        df["child_risk"] = df["child_risk"].replace([np.inf, -np.inf], np.nan).fillna(0)
+
+    # Pression démographique (densité × incidence)
+    if "Densite_Pop" in df.columns and "incidence_rate" in df.columns:
+        df["demo_pressure"] = df["Densite_Pop"] * df["incidence_rate"]
+        df["demo_pressure"] = df["demo_pressure"].replace([np.inf, -np.inf], np.nan).fillna(0)
+
+    return df
 
 def generate_alerts(df_future, threshold_percentile=75):
     if df_future.empty:
@@ -928,6 +950,115 @@ with st.sidebar.expander("🌍 Données Environnementales", expanded=False):
         rivers_gdf = ensure_wgs84(rivers_gdf)
         st.session_state.rivers_gdf = rivers_gdf
         st.success(f"✅ {len(rivers_gdf)} cours d'eau")
+
+# ÉTAPE 1: Extraire les données de population (autour ligne 450-500)
+# ============================================================
+
+status.text("📥 5/7 Extraction population WorldPop...")
+progressbar.progress(55)
+
+# Fonction d'extraction WorldPop (à définir au début du fichier)
+@st.cache_data
+def worldpop_malaria_stats(_sa_gdf, use_gee):
+    """
+    Extrait population totale + enfants 0-14 ans pour modélisation paludisme
+    """
+    if not use_gee:
+        return pd.DataFrame({
+            "health_area": _sa_gdf["health_area"],
+            "Pop_Totale": [np.nan] * len(_sa_gdf),
+            "Pop_Enfants_0_14": [np.nan] * len(_sa_gdf),
+            "Densite_Pop": [np.nan] * len(_sa_gdf)
+        })
+    
+    try:
+        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
+        pop_img = dataset.mosaic()
+        
+        # Bandes enfants (0-14 ans)
+        male_bands = ["M_0", "M_1", "M_5", "M_10"]
+        female_bands = ["F_0", "F_1", "F_5", "F_10"]
+        
+        selected_males = pop_img.select(male_bands)
+        selected_females = pop_img.select(female_bands)
+        total_pop = pop_img.select(['population'])
+        
+        # Sommes
+        males_sum = selected_males.reduce(ee.Reducer.sum()).rename('garcons')
+        females_sum = selected_females.reduce(ee.Reducer.sum()).rename('filles')
+        enfants = males_sum.add(females_sum).rename('enfants')
+        
+        # Mosaïque finale
+        final_mosaic = (total_pop
+                       .addBands(males_sum)
+                       .addBands(females_sum)
+                       .addBands(enfants))
+        
+        # Conversion densité → compte absolu (personnes/hectare → personnes)
+        pixel_area = ee.Image.pixelArea().divide(10000)  # m² → hectares
+        final_mosaic_count = final_mosaic.multiply(pixel_area)
+        
+        # Conversion géométries
+        features = []
+        for idx, row in _sa_gdf.iterrows():
+            geom = row['geometry']
+            props = {"health_area": row["health_area"]}
+            
+            if geom.geom_type == 'Polygon':
+                coords = [[[x, y] for x, y in geom.exterior.coords]]
+                ee_geom = ee.Geometry.Polygon(coords)
+            elif geom.geom_type == 'MultiPolygon':
+                coords = []
+                for poly in geom.geoms:
+                    coords.append([[[x, y] for x, y in poly.exterior.coords]])
+                ee_geom = ee.Geometry.MultiPolygon(coords)
+            else:
+                continue
+            
+            features.append(ee.Feature(ee_geom, props))
+        
+        fc = ee.FeatureCollection(features)
+        
+        # Calcul statistiques zonales
+        stats = final_mosaic_count.reduceRegions(
+            collection=fc,
+            reducer=ee.Reducer.sum(),
+            scale=100,
+            crs='EPSG:4326'
+        )
+        
+        stats_info = stats.getInfo()
+        
+        data_list = []
+        for feat in stats_info['features']:
+            props = feat['properties']
+            
+            pop_totale = props.get("population", 0)
+            enfants_total = props.get("enfants", 0)
+            
+            # Calcul densité (personnes par km²)
+            # Utiliser la superficie de la zone
+            area_km2 = shapely.geometry.shape(feat['geometry']).area * 111 * 111  # deg² → km²
+            densite = pop_totale / area_km2 if area_km2 > 0 else 0
+            
+            data_list.append({
+                "health_area": props.get("health_area", ""),
+                "Pop_Totale": int(pop_totale) if pop_totale > 0 else np.nan,
+                "Pop_Enfants_0_14": int(enfants_total) if enfants_total > 0 else np.nan,
+                "Densite_Pop": round(densite, 2)
+            })
+        
+        return pd.DataFrame(data_list)
+        
+    except Exception as e:
+        st.sidebar.error(f"❌ WorldPop : {str(e)}")
+        return pd.DataFrame({
+            "health_area": _sa_gdf["health_area"],
+            "Pop_Totale": [np.nan] * len(_sa_gdf),
+            "Pop_Enfants_0_14": [np.nan] * len(_sa_gdf),
+            "Densite_Pop": [np.nan] * len(_sa_gdf)
+        })
+
 
 # ============================================================
 # FILTRES
@@ -1442,7 +1573,6 @@ with tab2:
         
 # ============================================================
 # TAB 3 – MODÉLISATION SIMPLIFIÉE
-# Remplace la section "with tab3:" dans votre code principal
 # ============================================================
 
 with tab3:
@@ -1560,7 +1690,10 @@ with tab3:
                     status.text("⏰ 2/6 : Features temporelles...")
                     df_model = create_advanced_features(df_model)
                     progress_bar.progress(40)
-                    
+
+                    # 🎯 Features population (après features temporelles)
+                    df_model = create_population_features(df_model)
+
                     # ÉTAPE 3 : Environnement (40-50%)
                     status.text("🌍 3/6 : Données environnementales...")
                     gdf_env = gdf_health.copy()
@@ -1583,7 +1716,17 @@ with tab3:
                     gdf_env = create_environmental_features(gdf_env)
                     if 'flood_risk' in gdf_env.columns:
                         static_env_cols.append('flood_risk')
-                    
+                    # Intégration population dans gdf_env
+                    if df_population is not None and not df_population.empty:
+                        gdf_env = gdf_env.merge(
+                            df_population[["health_area", "Pop_Totale", "Pop_Enfants_0_14", "Densite_Pop"]],
+                            on="health_area",
+                            how="left"
+                        )
+                        static_env_cols.extend(
+                            [c for c in ["Pop_Totale", "Pop_Enfants_0_14", "Densite_Pop"] if c in gdf_env.columns]
+                        )
+
                     static_env_cols = [c for c in static_env_cols if c in gdf_env.columns]
                     if static_env_cols:
                         df_model = df_model.merge(gdf_env[['health_area'] + static_env_cols], on="health_area", how="left")
@@ -1610,6 +1753,26 @@ with tab3:
                         df_model['spatial_lag'] = spatial_lag_values
                     progress_bar.progress(60)
                     
+                    # 🧮 Coefficient d'ajustement population par aire
+                    if "Pop_Totale" in df_model.columns and df_model["Pop_Totale"].notna().any():
+                        mean_cases_by_area = df_model.groupby("health_area")["cases"].mean()
+                        pop_by_area = df_model.groupby("health_area")["Pop_Totale"].first()
+                    
+                        incidence_by_area = (mean_cases_by_area / pop_by_area * 10000)
+                        incidence_by_area = incidence_by_area.replace([np.inf, -np.inf], np.nan).fillna(0)
+                    
+                        if pop_by_area.sum() > 0:
+                            global_incidence = mean_cases_by_area.sum() / pop_by_area.sum() * 10000
+                            coef_ajustement = (incidence_by_area / global_incidence)
+                            coef_ajustement = coef_ajustement.replace([np.inf, -np.inf], np.nan).fillna(1.0)
+                            coef_ajustement = coef_ajustement.clip(0.5, 2.0)
+                        else:
+                            coef_ajustement = pd.Series(1.0, index=incidence_by_area.index)
+                    
+                        df_model["coef_population"] = df_model["health_area"].map(coef_ajustement).fillna(1.0)
+                    else:
+                        df_model["coef_population"] = 1.0
+
                     # ÉTAPE 5 : Sélection features (60-70%)
                     status.text("🔧 5/6 : Sélection features...")
                     feature_cols = ['week_num']
@@ -1625,6 +1788,20 @@ with tab3:
                             feature_cols.append('spatial_lag')
                         feature_cols.extend([c for c in df_model.columns if c.startswith('cluster_')])
                     
+                    # 🧮 Features population
+                    pop_features = [
+                        "Pop_Totale",
+                        "Pop_Enfants_0_14",
+                        "Densite_Pop",
+                        "incidence_rate",
+                        "child_risk",
+                        "demo_pressure",
+                        "coef_population",
+                    ]
+                    pop_features = [c for c in pop_features if c in df_model.columns]
+                    feature_cols.extend(pop_features)
+                    
+                    # Nettoyage final
                     feature_cols = list(set([c for c in feature_cols if c in df_model.columns]))
                     
                     X = df_model[feature_cols].copy().replace([np.inf, -np.inf], np.nan)
@@ -2098,7 +2275,24 @@ with tab4:
                         """, unsafe_allow_html=True)
                     else:
                         st.info("ℹ️ Aucune variable ne présente de corrélation forte avec les cas")
+                # 🧮 Coefficient d'ajustement population (par aire)
+                if "Pop_Totale" in df_model.columns and df_model["Pop_Totale"].notna().any():
+                    mean_cases_by_area = df_model.groupby("health_area")["cases"].mean()
+                    pop_by_area = df_model.groupby("health_area")["Pop_Totale"].first()
                 
+                    incidence_by_area = (mean_cases_by_area / pop_by_area * 10000).replace([np.inf, -np.inf], np.nan).fillna(0)
+                
+                    global_incidence = (mean_cases_by_area.sum() / pop_by_area.sum() * 10000) if pop_by_area.sum() > 0 else 0
+                    if global_incidence > 0:
+                        coef_ajustement = (incidence_by_area / global_incidence).replace([np.inf, -np.inf], np.nan).fillna(1.0)
+                        coef_ajustement = coef_ajustement.clip(0.5, 2.0)
+                    else:
+                        coef_ajustement = pd.Series(1.0, index=incidence_by_area.index)
+                
+                    df_model["coef_population"] = df_model["health_area"].map(coef_ajustement).fillna(1.0)
+                else:
+                    df_model["coef_population"] = 1.0
+
                 # Conseils données manquantes
                 if st.session_state.df_climate_aggregated is None:
                     st.markdown("""
@@ -2905,8 +3099,6 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
-
-
 
 
 
