@@ -978,8 +978,6 @@ progressbar.progress(55)
 
 df_population = worldpop_malaria_stats(gdf_env, use_gee)
 
-status.text("📥 5/7 Extraction population WorldPop...")
-progressbar.progress(55)
 
 # Fonction d'extraction WorldPop (à définir au début du fichier)
 @st.cache_data
@@ -3123,6 +3121,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
