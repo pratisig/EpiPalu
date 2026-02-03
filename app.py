@@ -968,8 +968,9 @@ def init_gee():
     except Exception as e:
         st.error(f"❌ GEE non initialisé : {e}")
         return False
-
-gee_connected = init_gee()
+@st.cache_data
+def worldpop_malaria_stats(_sa_gdf, use_gee):
+use_gee = init_gee()
 
     
 status = st.empty()
@@ -979,16 +980,15 @@ progressbar = st.progress(0)
 progressbar.progress(55)
 
 df_population = worldpop_malaria_stats(gdf_env, use_gee)
-if not gee_connected:
+if not use_gee:
     status.error("✗ GEE déconnecté → WorldPop NaN")
     population_mean = np.nan
 else:
-    # extraction WorldPop normale
+    pass # extraction WorldPop normale
 
 
 # Fonction d'extraction WorldPop (à définir au début du fichier)
-@st.cache_data
-def worldpop_malaria_stats(_sa_gdf, use_gee):
+
     """
     Extrait population totale + enfants 0-14 ans pour modélisation paludisme
     """
@@ -3128,6 +3128,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
