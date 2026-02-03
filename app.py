@@ -972,7 +972,8 @@ if gee_ok:
 else:
     st.sidebar.error("✗ GEE déconnecté → WorldPop NaN")
     use_gee = False
-
+    
+status = st.empty()
 status.text("📥 5/7 Extraction population WorldPop...")
 progressbar.progress(55)
 
@@ -3121,6 +3122,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
