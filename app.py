@@ -949,24 +949,27 @@ with st.sidebar.expander("🌍 Données Environnementales", expanded=False):
 # ============================================================
 # Initialisation Google Earth Engine (Streamlit Cloud)
 @st.cache_resource
-try:
-    import ee
+def init_gee():
+    try:
+        import ee
 
-    if not ee.data._credentials:
-        ee.Initialize(
-            ee.ServiceAccountCredentials(
-                st.secrets["gee"]["client_email"],
-                key_data=st.secrets["gee"]["private_key"]
+        if not ee.data._credentials:
+            ee.Initialize(
+                ee.ServiceAccountCredentials(
+                    st.secrets["gee"]["client_email"],
+                    key_data=st.secrets["gee"]["private_key"]
+                )
             )
-        )
-    else:
-        ee.Initialize()
+        else:
+            ee.Initialize()
 
-    gee_connected = True
+        return True
 
-except Exception as e:
-    gee_connected = False
-    st.error(f"❌ GEE non initialisé : {e}")
+    except Exception as e:
+        st.error(f"❌ GEE non initialisé : {e}")
+        return False
+
+gee_connected = init_gee()
 
     
 status = st.empty()
@@ -3125,6 +3128,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
