@@ -6,46 +6,48 @@
 # ============================================================
 # -*- coding: utf-8 -*-
 
+# Imports principaux (obligatoires)
 import streamlit as st
 import pandas as pd
 import geopandas as gpd
 import numpy as np
 import folium
 from folium import Popup, Tooltip, CircleMarker, GeoJson, LayerControl, DivIcon
-from folium.plugins import Draw, MeasureControl, HeatMap
+from folium.plugins import HeatMap
 from streamlit_folium import st_folium
 import rasterio
 from rasterio.mask import mask
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, ExtraTreesRegressor
 from sklearn.model_selection import train_test_split, cross_val_score, TimeSeriesSplit
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from branca.colormap import linear
 from PIL import Image
 from scipy.spatial.distance import cdist
-from io import BytesIO
-import base64
-from shapely.geometry import Point
 from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 import warnings
 import requests
 import json
-from pathlib import Path
-import tempfile
+from shapely.geometry import Point
 
-warnings.filterwarnings('ignore')
+# Google Earth Engine (avec gestion d'erreur)
+try:
+    import ee
+    ee.Initialize()
+    use_gee = True
+    st.sidebar.success("✅ Google Earth Engine activé")
+except Exception as e:
+    use_gee = False
+    st.sidebar.warning(f"❌ GEE : {str(e)} → WorldPop désactivé")
 
 # ============================================================
 # CONFIG STREAMLIT
@@ -3099,6 +3101,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
