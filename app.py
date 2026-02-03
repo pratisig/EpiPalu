@@ -39,27 +39,7 @@ import requests
 import json
 from shapely.geometry import Point
 
-# Initialisation Google Earth Engine
-@st.cache_resource
-def init_gee():
-    try:
-        key_dict = json.loads(st.secrets["GEE_SERVICE_ACCOUNT"])
-        credentials = ee.ServiceAccountCredentials(
-            key_dict["client_email"],
-            key_data=json.dumps(key_dict)
-        )
-        ee.Initialize(credentials)
-        return True
-    except:
-        try:
-            ee.Initialize()
-            return True
-        except:
-            return False
 
-gee_ok = init_gee()
-if gee_ok:
-    st.sidebar.success("✓ GEE connecté")
 
 # ============================================================
 # CONFIG STREAMLIT
@@ -3143,6 +3123,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
