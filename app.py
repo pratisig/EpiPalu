@@ -2127,7 +2127,16 @@ with tab4:
         df_agg = df_cases.groupby('health_area', as_index=False).agg({'cases': 'sum', 'deaths': 'sum'})
         df_corr = df_agg.copy()
         
+        # ✅ NOUVEAU : Ajouter population à df_corr
+        if 'dfpopulation' in st.session_state and st.session_state.dfpopulation is not None and not st.session_state.dfpopulation.empty:
+            df_pop = st.session_state.dfpopulation[['health_area', 'Pop_Totale', 'Pop_Enfants_0_14', 'Densite_Pop']].copy()
+            df_corr = df_corr.merge(df_pop, on='health_area', how='left')
+            st.info("✅ Données population mergées dans l'analyse")
+        else:
+            st.warning("⚠️ Population non disponible pour cette analyse")
+        
         numeric_cols = ['cases', 'deaths']
+
         
         # ✅ CORRECTION 2 : Ajouter climat SI DISPONIBLE
         if st.session_state.df_climate_aggregated is not None:
@@ -3172,6 +3181,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
