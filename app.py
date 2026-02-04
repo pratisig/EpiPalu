@@ -882,11 +882,11 @@ with st.sidebar.expander("📍 Données Obligatoires", expanded=True):
                     st.info(f"📊 DataFrame retourné : {len(dfpopulation)} lignes")
                     if not dfpopulation.empty:
                         st.info(f"📊 Colonnes : {list(dfpopulation.columns)}")
-                        st.info(f"📊 Valeurs non-NaN : {dfpopulation['PopTotale'].notna().sum()}/{len(dfpopulation)}")
+                        st.info(f"📊 Valeurs non-NaN : {dfpopulation['Pop_Totale'].notna().sum()}/{len(dfpopulation)}")
                     
-                    if not dfpopulation.empty and dfpopulation['PopTotale'].notna().any():
+                    if not dfpopulation.empty and dfpopulation['Pop_Totale'].notna().any():
                         gdf = gdf.merge(
-                            dfpopulation[['health_area', 'PopTotale', 'PopEnfants014', 'DensitePop']], 
+                            dfpopulation[['health_area', 'Pop_Totale', 'Pop_Enfants_0_14', 'Densite_Pop']], 
                             on='health_area', 
                             how='left'
                         )
@@ -894,7 +894,7 @@ with st.sidebar.expander("📍 Données Obligatoires", expanded=True):
                         st.session_state.gdf_health = gdf
                         st.session_state.dfpopulation = dfpopulation
                         
-                        total_pop = dfpopulation['PopTotale'].sum()
+                        total_pop = dfpopulation['Pop_Totale'].sum()
                         st.success(f"✅ Population : {int(total_pop):,} habitants")
                     else:
                         st.warning("⚠️ WorldPop non disponible (DataFrame vide ou que des NaN)")
@@ -3136,6 +3136,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
