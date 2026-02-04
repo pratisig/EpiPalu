@@ -1165,7 +1165,7 @@ with tab1:
         with col5:
             cfr = (total_deaths / total_cases * 100) if total_cases > 0 else 0
             st.metric("Létalité", f"{cfr:.1f}%")
-         🔵 NOUVEAU : KPI POPULATION
+         #🔵 NOUVEAU : KPI POPULATION
         if "dfpopulation" in st.session_state and not st.session_state.dfpopulation.empty:
             df_pop = st.session_state.dfpopulation
             # si filtres zone appliqués
@@ -3200,6 +3200,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
