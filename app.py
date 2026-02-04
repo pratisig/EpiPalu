@@ -1426,7 +1426,7 @@ with tab1:
             st.plotly_chart(fig2, use_container_width=True)
 
 # ============================================================
-# TAB 2 – CARTOGRAPHIE (VERSION CORRIGÉE - COUCHES GROUPÉES)
+# TAB 2 – CARTOGRAPHIE (VERSION CORRIGÉE - COUCHES GROUPÉES + POPULATION)
 # ============================================================
 
 with tab2:
@@ -1499,7 +1499,7 @@ with tab2:
                         legend_name=f"{var_labels.get(climate_var, climate_var)} - S{selected_week_climate}"
                     ).add_to(m_climate)
                     
-                    # ✅ CORRECTION : Grouper les étiquettes dans UN SEUL FeatureGroup
+                    # Étiquettes climat
                     feature_group_labels = folium.FeatureGroup(name="Étiquettes Climat", show=True)
                     
                     for idx, row in gdf_climate.iterrows():
@@ -1538,7 +1538,9 @@ with tab2:
             
             st.markdown("---")
         
-        # Carte épidémiologique
+        # =====================================================
+        # CARTE ÉPIDÉMIOLOGIQUE + POPULATION
+        # =====================================================
         st.markdown("## 📍 RÉPARTITION DES CAS")
         
         df_plot = df_cases.copy()
@@ -1551,6 +1553,12 @@ with tab2:
         gdf_map = gdf_health.merge(df_agg, on="health_area", how="left")
         gdf_map[["cases","deaths"]] = gdf_map[["cases","deaths"]].fillna(0)
         
+        # ✅ MERGER POPULATION dans gdf_map
+        if 'dfpopulation' in st.session_state and st.session_state.dfpopulation is not None:
+            df_pop = st.session_state.dfpopulation[['health_area', 'Pop_Totale', 'Pop_Enfants_0_14', 'Densite_Pop']].copy()
+            gdf_map = gdf_map.merge(df_pop, on='health_area', how='left')
+            st.info(f"✅ Population mergée: {gdf_map['Pop_Totale'].notna().sum()}/{len(gdf_map)} aires")
+        
         # Ajouter moyennes climatiques
         if st.session_state.df_climate_aggregated is not None:
             df_climate_avg = st.session_state.df_climate_aggregated.groupby('health_area').agg({
@@ -1560,6 +1568,7 @@ with tab2:
             
             gdf_map = gdf_map.merge(df_climate_avg, on='health_area', how='left')
 
+        # Données environnementales
         with st.spinner("📊 Extraction données environnementales..."):
             if st.session_state.flood_raster is not None:
                 gdf_map["flood_mean"] = extract_raster_statistics(gdf_map, st.session_state.flood_raster, 'mean')
@@ -1574,6 +1583,7 @@ with tab2:
             
             gdf_map = create_environmental_features(gdf_map)
 
+        # Contrôles carte
         col1, col2, col3 = st.columns(3)
         with col1:
             map_viz = st.selectbox("Type", ["Choroplèthe", "Cercles", "Heatmap"])
@@ -1582,14 +1592,17 @@ with tab2:
         with col3:
             show_rivers = st.checkbox("Rivières", value=False)
 
+        # Initialiser carte
         center = gdf_map.geometry.unary_union.centroid
         m = folium.Map(location=[center.y, center.x], zoom_start=8, tiles="CartoDB positron")
 
+        # Rasters
         if "Inondation" in show_rasters and st.session_state.flood_raster is not None:
             add_raster_to_map(m, st.session_state.flood_raster, "Inondation")
         if "Élévation" in show_rasters and st.session_state.elevation_raster is not None:
             add_raster_to_map(m, st.session_state.elevation_raster, "Élévation")
 
+        # Couches selon type
         if map_viz == "Choroplèthe":
             folium.Choropleth(
                 geo_data=gdf_map,
@@ -1603,9 +1616,8 @@ with tab2:
             ).add_to(m)
         
         elif map_viz == "Cercles":
-            # ✅ CORRECTION 1 : Grouper limites aires dans UN FeatureGroup
+            # Limites aires
             feature_group_boundaries = folium.FeatureGroup(name="Aires de Santé (limites)", show=True)
-            
             for idx, row in gdf_map.iterrows():
                 folium.GeoJson(
                     row['geometry'],
@@ -1617,12 +1629,10 @@ with tab2:
                         'opacity': 0.6
                     }
                 ).add_to(feature_group_boundaries)
-            
             feature_group_boundaries.add_to(m)
             
-            # ✅ CORRECTION 2 : Grouper cercles dans UN FeatureGroup
+            # Cercles proportionnels
             feature_group_circles = folium.FeatureGroup(name="Cercles Proportionnels (Cas)", show=True)
-            
             max_cases = max(gdf_map["cases"].max(), 1)
             for idx, row in gdf_map.iterrows():
                 radius = 10 + 40 * safe_float(row["cases"]) / max_cases
@@ -1634,7 +1644,6 @@ with tab2:
                     fillOpacity=0.7,
                     popup=f"<b>{row['health_area']}</b><br>Cas: {safe_int(row['cases'])}"
                 ).add_to(feature_group_circles)
-            
             feature_group_circles.add_to(m)
         
         elif map_viz == "Heatmap":
@@ -1645,6 +1654,7 @@ with tab2:
             if heat_data:
                 HeatMap(heat_data, radius=15, blur=25, name="Heatmap Cas").add_to(m)
 
+        # Rivières
         if show_rivers and st.session_state.rivers_gdf is not None and not st.session_state.rivers_gdf.empty:
             GeoJson(
                 st.session_state.rivers_gdf,
@@ -1652,76 +1662,78 @@ with tab2:
                 style_function=lambda x: {"color":"#0066CC", "weight": 2}
             ).add_to(m)
         
-        # ✅ CORRECTION 3 : Grouper étiquettes aires dans UN FeatureGroup
+        # =====================================================
+        # ÉTIQUETTES AIRES (toujours visibles)
+        # =====================================================
         feature_group_labels = folium.FeatureGroup(name="Étiquettes Aires", show=True)
-
         for idx, row in gdf_map.iterrows():
             centroid = row.geometry.centroid
-            
-            # Étiquette nom aire
             folium.Marker(
                 location=[centroid.y, centroid.x],
                 icon=DivIcon(html=f"""
                     <div style="font-size: 9pt; font-weight: 600; color: #1a1a1a;
-                    text-shadow: 
-                        -1px -1px 0 #fff,  
-                        1px -1px 0 #fff,
-                        -1px 1px 0 #fff,
-                        1px 1px 0 #fff,
-                        0px 2px 3px rgba(0,0,0,0.3);
-                    white-space: nowrap;">
+                    text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0px 2px 3px rgba(0,0,0,0.3); white-space: nowrap;">
                         {row['health_area']}
                     </div>
                 """)
             ).add_to(feature_group_labels)
-        
         feature_group_labels.add_to(m)
         
-# ✅ CORRECTION 4 : Grouper popups dans UN FeatureGroup
-feature_group_popups = folium.FeatureGroup(name="Popups Détails", show=False)
-
-for idx, row in gdf_map.iterrows():
-    # Popup enrichi AVEC POPULATION + DENSITÉ
-    popup_html = f"""
-    <div style="width:320px; font-family:Arial; font-size:12px;">
-        <h4 style="color:#2E86AB; margin:0;">{row['health_area']}</h4>
-        <hr style="margin:5px 0;">
-        <table style="width:100%;">
-            <tr><td><b>📊 Cas:</b></td><td>{safe_int(row['cases'])}</td></tr>
-            <tr><td><b>💀 Décès:</b></td><td>{safe_int(row['deaths'])}</td></tr>
+        # =====================================================
+        # POPUPS DÉTAILLÉS (avec population)
+        # =====================================================
+        feature_group_popups = folium.FeatureGroup(name="Popups Détails", show=False)
+        for idx, row in gdf_map.iterrows():
+            popup_html = f"""
+            <div style="width:340px; font-family:Arial; font-size:12px;">
+                <h4 style="color:#2E86AB; margin:0;">{row['health_area']}</h4>
+                <hr style="margin:5px 0;">
+                <table style="width:100%;">
+                    <tr><td><b>📊 Cas:</b></td><td>{safe_int(row['cases'])}</td></tr>
+                    <tr><td><b>💀 Décès:</b></td><td>{safe_int(row['deaths'])}</td></tr>
+            """
             
-            <!-- 👥 NOUVEAU : POPULATION -->
-            <tr style='background:#F3E5F5;'><td><b>👥 Population:</b></td><td>{int(row.get('Pop_Totale', 0)):,}</td></tr>
-            <tr style='background:#E8F5E9;'><td><b>👶 Enfants 0–14:</b></td><td>{int(row.get('Pop_Enfants_0_14', 0)):,}</td></tr>
-            <tr style='background:#FFF3E0;'><td><b>📏 Densité:</b></td><td>{safe_float(row.get('Densite_Pop', 0)):.0f} hab/km²</td></tr>
+            # ✅ POPULATION (avec .get() sécurisé)
+            if 'Pop_Totale' in gdf_map.columns:
+                popup_html += f"<tr style='background:#F3E5F5;'><td><b>👥 Population:</b></td><td>{int(row.get('Pop_Totale', 0)):,}</td></tr>"
+            if 'Pop_Enfants_0_14' in gdf_map.columns:
+                popup_html += f"<tr style='background:#E8F5E9;'><td><b>👶 Enfants 0–14:</b></td><td>{int(row.get('Pop_Enfants_0_14', 0)):,}</td></tr>"
+            if 'Densite_Pop' in gdf_map.columns:
+                popup_html += f"<tr style='background:#FFF3E0;'><td><b>📏 Densité:</b></td><td>{safe_float(row.get('Densite_Pop', 0)):.0f} hab/km²</td></tr>"
             
-            <!-- Climat (couleurs existantes) -->
-    """
+            # Climat
+            if 'temp_api' in gdf_map.columns and pd.notna(row.get('temp_api')):
+                popup_html += f"<tr style='background:#FFF3E0;'><td><b>🌡️ Température:</b></td><td>{safe_float(row['temp_api']):.1f}°C</td></tr>"
+            if 'precip_api' in gdf_map.columns and pd.notna(row.get('precip_api')):
+                popup_html += f"<tr style='background:#E1F5FE;'><td><b>🌧️ Précipitations:</b></td><td>{safe_float(row['precip_api']):.1f}mm</td></tr>"
+            if 'humidity_api' in gdf_map.columns and pd.notna(row.get('humidity_api')):
+                popup_html += f"<tr style='background:#E8F5E9;'><td><b>💧 Humidité:</b></td><td>{safe_float(row['humidity_api']):.1f}%</td></tr>"
+            
+            # Environnement
+            if 'flood_mean' in gdf_map.columns and pd.notna(row.get('flood_mean')):
+                popup_html += f"<tr><td><b>🌊 Inondation:</b></td><td>{safe_float(row['flood_mean']):.2f}</td></tr>"
+            if 'elevation_mean' in gdf_map.columns and pd.notna(row.get('elevation_mean')):
+                popup_html += f"<tr><td><b>⛰️ Élévation:</b></td><td>{safe_float(row['elevation_mean']):.0f}m</td></tr>"
+            if 'dist_river' in gdf_map.columns and pd.notna(row.get('dist_river')):
+                popup_html += f"<tr><td><b>🏞️ Dist. rivière:</b></td><td>{safe_float(row['dist_river']):.2f}km</td></tr>"
+            
+            popup_html += "</table></div>"
+            
+            folium.GeoJson(
+                row['geometry'],
+                style_function=lambda x: {'fillOpacity': 0, 'color': 'transparent'},
+                popup=folium.Popup(popup_html, max_width=360)
+            ).add_to(feature_group_popups)
+        
+        feature_group_popups.add_to(m)
+        
+        # Layer control
+        folium.LayerControl(collapsed=False).add_to(m)
+        st_folium(m, width=1200, height=700, key="main_map")
     
-    if 'temp_api' in row.index and not pd.isna(row['temp_api']):
-        popup_html += f"<tr style='background:#FFF3E0;'><td><b>🌡️ Température:</b></td><td>{safe_float(row['temp_api']):.1f}°C</td></tr>"
-    if 'precip_api' in row.index and not pd.isna(row['precip_api']):
-        popup_html += f"<tr style='background:#E1F5FE;'><td><b>🌧️ Précipitations:</b></td><td>{safe_float(row['precip_api']):.1f}mm</td></tr>"
-    if 'humidity_api' in row.index and not pd.isna(row['humidity_api']):
-        popup_html += f"<tr style='background:#E8F5E9;'><td><b>💧 Humidité:</b></td><td>{safe_float(row['humidity_api']):.1f}%</td></tr>"
-    
-    # Environnement
-    if 'flood_mean' in row.index and not pd.isna(row['flood_mean']):
-        popup_html += f"<tr><td><b>🌊 Inondation:</b></td><td>{safe_float(row['flood_mean']):.2f}</td></tr>"
-    if 'elevation_mean' in row.index and not pd.isna(row['elevation_mean']):
-        popup_html += f"<tr><td><b>⛰️ Élévation:</b></td><td>{safe_float(row['elevation_mean']):.0f}m</td></tr>"
-    if 'dist_river' in row.index and not pd.isna(row['dist_river']):
-        popup_html += f"<tr><td><b>🏞️ Dist. rivière:</b></td><td>{safe_float(row['dist_river']):.2f}km</td></tr>"
-    
-    popup_html += "</table></div>"
-    
-    folium.GeoJson(
-        row['geometry'],
-        style_function=lambda x: {'fillOpacity': 0, 'color': 'transparent'},
-        popup=folium.Popup(popup_html, max_width=340)  # élargi pour population
-    ).add_to(feature_group_popups)
+    else:
+        st.info("ℹ️ Chargez d'abord les aires de santé et les cas dans la sidebar")
 
-feature_group_popups.add_to(m)
 
         
 # ============================================================
@@ -3285,6 +3297,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
