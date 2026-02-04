@@ -1060,26 +1060,45 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
         })
 
 
-# -------------------------
-# UTILISATION
-# -------------------------
+## ✅ CODE CORRIGÉ
 status = st.empty()
 status.text("📥 5/7 Extraction population WorldPop...")
 
 progressbar = st.progress(55)
 
-# Récupérer le bon GeoDataFrame
-gdfhealth = st.session_state.gdfhealth
-
-if gdfhealth is None:
+# ✅ Vérifier d'abord si la clé existe dans session_state
+if 'gdfhealth' not in st.session_state or st.session_state.gdfhealth is None:
     st.warning("⚠️ Veuillez charger les aires de santé d'abord")
-    dfpopulation = pd.DataFrame()
+    dfpopulation = pd.DataFrame({
+        "healtharea": [],
+        "PopTotale": [],
+        "PopEnfants014": [],
+        "DensitePop": []
+    })
 else:
-    dfpopulation = (gdfhealth, use_gee)
-
+    # ✅ Récupérer le GeoDataFrame
+    gdfhealth = st.session_state.gdfhealth
+    
+    # ✅ Appeler la fonction worldpop_malaria_stats
+    dfpopulation = worldpop_malaria_stats(gdfhealth, use_gee)
+    
+    if not dfpopulation.empty and dfpopulation['PopTotale'].notna().any():
+        total_pop = dfpopulation['PopTotale'].sum()
+        st.success(f"✅ Population extraite : {int(total_pop):,} habitants")
+        
+        # ✅ Afficher statistiques rapides
+        col1, col2, col3 = st.columns(3)
+        col1.metric("👥 Population Totale", f"{int(total_pop):,}")
+        col2.metric("📍 Aires avec données", f"{dfpopulation['PopTotale'].notna().sum()}")
+        col3.metric("📊 Densité moyenne", f"{dfpopulation['DensitePop'].mean():.1f} hab/km²")
+    else:
+        st.warning("⚠️ Données WorldPop non disponibles (vérifier connexion GEE)")
 
 if not use_gee:
-    status.error("✗ GEE déconnecté → WorldPop NaN")
+    status.info("ℹ️ GEE désactivé → Données WorldPop non extraites")
+
+progressbar.progress(60)
+
 
 
 # ============================================================
@@ -3121,6 +3140,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
