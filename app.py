@@ -1679,7 +1679,7 @@ with tab2:
             ).add_to(feature_group_labels)
         feature_group_labels.add_to(m)
         
-        # =====================================================
+                # =====================================================
         # POPUPS DÉTAILLÉS (avec population)
         # =====================================================
         feature_group_popups = folium.FeatureGroup(name="Popups Détails", show=False)
@@ -1691,7 +1691,8 @@ with tab2:
                 <table style="width:100%;">
                     <tr><td><b>📊 Cas:</b></td><td>{safe_int(row['cases'])}</td></tr>
                     <tr><td><b>💀 Décès:</b></td><td>{safe_int(row['deaths'])}</td></tr>
-        
+            """  # ✅ FERMER ICI
+            
             # ✅ POPULATION (avec .get() sécurisé)
             if 'Pop_Totale' in gdf_map.columns:
                 popup_html += f"<tr style='background:#F3E5F5;'><td><b>👥 Population:</b></td><td>{int(row.get('Pop_Totale', 0)):,}</td></tr>"
@@ -1716,7 +1717,7 @@ with tab2:
             if 'dist_river' in gdf_map.columns and pd.notna(row.get('dist_river')):
                 popup_html += f"<tr><td><b>🏞️ Dist. rivière:</b></td><td>{safe_float(row['dist_river']):.2f}km</td></tr>"
             
-            popup_html += "</table></div>"
+            popup_html += "</table></div>"  # ✅ Fermer table + div
             
             folium.GeoJson(
                 row['geometry'],
@@ -1726,12 +1727,13 @@ with tab2:
         
         feature_group_popups.add_to(m)
         
-        # Layer control
+        # Layer control + affichage
         folium.LayerControl(collapsed=False).add_to(m)
         st_folium(m, width=1200, height=700, key="main_map")
     
     else:
         st.info("ℹ️ Chargez d'abord les aires de santé et les cas dans la sidebar")
+
 
 
         
@@ -3296,6 +3298,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
