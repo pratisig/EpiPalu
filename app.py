@@ -1174,7 +1174,7 @@ with tab1:
 
             colp1, colp2, colp3 = st.columns(3)
             with colp1:
-                st.metric("Population totale", f"{int(df_pop['PopTotale'].sum()):,}".replace(",", " "))
+                st.metric("Population totale", f"{int(df_pop['Pop_Totale'].sum()):,}".replace(",", " "))
             with colp2:
                 st.metric("Enfants 0–14 ans", f"{int(df_pop['PopEnfants014'].sum()):,}".replace(",", " "))
             with colp3:
@@ -3200,6 +3200,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
