@@ -751,46 +751,47 @@ st.sidebar.header("📁 Chargement des Données")
 
 with st.sidebar.expander("📍 Données Obligatoires", expanded=True):
     health_file = st.file_uploader("Aires de santé (GeoJSON/SHP/ZIP)", type=["geojson","shp","zip"], key="health")
+    
     if health_file:
         gdf = gpd.read_file(health_file)
         gdf = ensure_wgs84(gdf)
+        
         if "health_area" not in gdf.columns:
-            st.error(" Colonne 'health_area' absente")
+            st.error("❌ Colonne 'health_area' absente")
         else:
             gdf["health_area"] = gdf["health_area"].astype(str).str.strip().str.lower()
             st.session_state.gdf_health = gdf
             st.success(f"✅ {len(gdf)} aires chargées")
-            st.session_state.gdfhealth = gdf
-            st.session_state.dfpopulation = dfpopulation
-            total_pop = dfpopulation['PopTotale'].sum()
-            st.success(f"✅ Population WorldPop : {int(total_pop):,} habitants")
-         else:
-             st.warning("⚠️ WorldPop non disponible (vérifier GEE)")                                  
-                        
-                                    
-             # Vérifier si WorldPop déjà téléchargé pour ce fichier
+            
+            # Téléchargement automatique WorldPop
             if 'dfpopulation' not in st.session_state:
                 with st.spinner("📥 Extraction population WorldPop..."):
                     dfpopulation = worldpop_malaria_stats(gdf, use_gee)
                     
                     if not dfpopulation.empty and dfpopulation['PopTotale'].notna().any():
-                        # Merge directement avec gdf
                         gdf = gdf.merge(
-                            dfpopulation[['healtharea', 'PopTotale', 'PopEnfants014', 'DensitePop']], 
-                            on='healtharea', 
+                            dfpopulation[['health_area', 'PopTotale', 'PopEnfants014', 'DensitePop']], 
+                            on='health_area', 
                             how='left'
                         )
                         
-            # ============================================================
-            # 📊 AFFICHAGE STATS WORLDPOP (optionnel mais utile)
-            # ============================================================
+                        st.session_state.gdf_health = gdf
+                        st.session_state.dfpopulation = dfpopulation
+                        
+                        total_pop = dfpopulation['PopTotale'].sum()
+                        st.success(f"✅ Population : {int(total_pop):,} habitants")
+                    else:
+                        st.warning("⚠️ WorldPop non disponible")
             
+            # Affichage stats
             if 'dfpopulation' in st.session_state and not st.session_state.dfpopulation.empty:
                 dfpop = st.session_state.dfpopulation
-                
                 col1, col2 = st.sidebar.columns(2)
-                col1.metric("👥 Population", f"{int(dfpop['PopTotale'].sum()):,}")
-                col2.metric("📍 Aires", f"{dfpop['PopTotale'].notna().sum()}/{len(dfpop)}")
+                col1.metric("👥 Pop.", f"{int(dfpop['PopTotale'].sum()):,}")
+                col2.metric("📍 Aires", f"{dfpop['PopTotale'].notna().sum()}")
+
+                
+                 # 📊 Cas hebdomadaires
     cases_file = st.file_uploader("Cas hebdomadaires (CSV)", type=["csv", "txt", "tsv"], key="cases")
     if cases_file:
         try:
@@ -1100,7 +1101,7 @@ progressbar = st.progress(55)
 if 'gdfhealth' not in st.session_state or st.session_state.gdfhealth is None:
     st.warning("⚠️ Veuillez charger les aires de santé d'abord")
     dfpopulation = pd.DataFrame({
-        "healtharea": [],
+        "health_area": [],
         "PopTotale": [],
         "PopEnfants014": [],
         "DensitePop": []
@@ -3170,6 +3171,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
