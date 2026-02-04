@@ -213,7 +213,112 @@ def fetch_climate_open_meteo(lat, lon, start_date, end_date):
     except Exception as e:
         st.warning(f"⚠️ Open-Meteo API erreur: {str(e)}")
         return None
+# -------------------------
+# Initialisation Google Earth Engine (Streamlit Cloud)
+# -------------------------
+@st.cache_resource
+def init_gee():
+    try:
+        key_dict = json.loads(st.secrets["GEE_SERVICE_ACCOUNT"])
+        credentials = ee.ServiceAccountCredentials(
+            key_dict["client_email"],
+            key_data=json.dumps(key_dict)
+        )
+        ee.Initialize(credentials)
+        return True
+    except:
+        try:
+            ee.Initialize()
+            return True
+        except:
+            return False
 
+gee_ok = init_gee()
+if gee_ok:
+    st.sidebar.success("✓ GEE connecté")
+
+use_gee = init_gee()  # Flag global harmonisé
+
+# -------------------------
+# Fonction WorldPop UNIQUE
+# -------------------------
+@st.cache_data
+def worldpop_malaria_stats(_sa_gdf, use_gee):
+    """
+    Extrait population totale, enfants 0–14 ans et densité (WorldPop).
+    Retourne NaN si GEE indisponible.
+    """
+
+    if not use_gee:
+        return pd.DataFrame({
+            "health_area": _sa_gdf["health_area"].values,
+            "Pop_Totale": np.nan,
+            "Pop_Enfants_0_14": np.nan,
+            "Densite_Pop": np.nan
+        })
+
+    try:
+        import ee
+        import shapely.geometry
+
+        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
+        pop_img = dataset.mosaic()
+
+        # Bandes enfants
+        male_bands = ["M_0", "M_1", "M_5", "M_10"]
+        female_bands = ["F_0", "F_1", "F_5", "F_10"]
+
+        enfants_img = (
+            pop_img.select(male_bands).reduce(ee.Reducer.sum())
+            .add(pop_img.select(female_bands).reduce(ee.Reducer.sum()))
+            .rename("enfants")
+        )
+
+        total_img = pop_img.select(["population"])
+
+        pixel_area = ee.Image.pixelArea().divide(1e6)  # km²
+        total_count = total_img.multiply(pixel_area)
+        enfants_count = enfants_img.multiply(pixel_area)
+
+        features = []
+        for _, row in _sa_gdf.iterrows():
+            geom = ee.Geometry(row.geometry.__geo_interface__)
+            features.append(ee.Feature(geom, {"health_area": row["health_area"]}))
+
+        fc = ee.FeatureCollection(features)
+
+        stats = ee.Image.cat([total_count, enfants_count]).reduceRegions(
+            collection=fc,
+            reducer=ee.Reducer.sum(),
+            scale=100
+        ).getInfo()
+
+        data = []
+        for f in stats["features"]:
+            props = f["properties"]
+            geom = shapely.geometry.shape(f["geometry"])
+            area_km2 = geom.area * 111 * 111
+
+            pop = props.get("population", np.nan)
+            enfants = props.get("enfants", np.nan)
+
+            data.append({
+                "health_area": props["health_area"],
+                "Pop_Totale": pop,
+                "Pop_Enfants_0_14": enfants,
+                "Densite_Pop": pop / area_km2 if area_km2 > 0 else np.nan
+            })
+
+        return pd.DataFrame(data)
+
+    except Exception as e:
+        st.warning(f"⚠️ WorldPop erreur : {e}")
+        return pd.DataFrame({
+            "health_area": _sa_gdf["health_area"].values,
+            "Pop_Totale": np.nan,
+            "Pop_Enfants_0_14": np.nan,
+            "Densite_Pop": np.nan
+        })
 # ============================================================
 # AGRÉGATION PAR AIRE ET SEMAINE
 # ============================================================
@@ -975,124 +1080,6 @@ with st.sidebar.expander("🌍 Données Environnementales", expanded=False):
         rivers_gdf = ensure_wgs84(rivers_gdf)
         st.session_state.rivers_gdf = rivers_gdf
         st.success(f"✅ {len(rivers_gdf)} cours d'eau")
-
-# ============================================================
-# ÉTAPE 1: Extraire les données de population
-# ============================================================
-
-# -------------------------
-# Initialisation Google Earth Engine (Streamlit Cloud)
-# -------------------------
-@st.cache_resource
-def init_gee():
-    try:
-        key_dict = json.loads(st.secrets["GEE_SERVICE_ACCOUNT"])
-        credentials = ee.ServiceAccountCredentials(
-            key_dict["client_email"],
-            key_data=json.dumps(key_dict)
-        )
-        ee.Initialize(credentials)
-        return True
-    except:
-        try:
-            ee.Initialize()
-            return True
-        except:
-            return False
-
-gee_ok = init_gee()
-if gee_ok:
-    st.sidebar.success("✓ GEE connecté")
-
-
-# Flag global harmonisé
-use_gee = init_gee()
-
-
-# -------------------------
-# Fonction WorldPop UNIQUE
-# -------------------------
-@st.cache_data
-def worldpop_malaria_stats(_sa_gdf, use_gee):
-    """
-    Extrait population totale, enfants 0–14 ans et densité (WorldPop).
-    Retourne NaN si GEE indisponible.
-    """
-
-    if not use_gee:
-        return pd.DataFrame({
-            "health_area": _sa_gdf["health_area"].values,
-            "Pop_Totale": np.nan,
-            "Pop_Enfants_0_14": np.nan,
-            "Densite_Pop": np.nan
-        })
-
-    try:
-        import ee
-        import shapely.geometry
-
-        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
-        pop_img = dataset.mosaic()
-
-        # Bandes enfants
-        male_bands = ["M_0", "M_1", "M_5", "M_10"]
-        female_bands = ["F_0", "F_1", "F_5", "F_10"]
-
-        enfants_img = (
-            pop_img.select(male_bands).reduce(ee.Reducer.sum())
-            .add(pop_img.select(female_bands).reduce(ee.Reducer.sum()))
-            .rename("enfants")
-        )
-
-        total_img = pop_img.select(["population"])
-
-        pixel_area = ee.Image.pixelArea().divide(1e6)  # km²
-        total_count = total_img.multiply(pixel_area)
-        enfants_count = enfants_img.multiply(pixel_area)
-
-        features = []
-        for _, row in _sa_gdf.iterrows():
-            geom = ee.Geometry(row.geometry.__geo_interface__)
-            features.append(ee.Feature(geom, {"health_area": row["health_area"]}))
-
-        fc = ee.FeatureCollection(features)
-
-        stats = ee.Image.cat([total_count, enfants_count]).reduceRegions(
-            collection=fc,
-            reducer=ee.Reducer.sum(),
-            scale=100
-        ).getInfo()
-
-        data = []
-        for f in stats["features"]:
-            props = f["properties"]
-            geom = shapely.geometry.shape(f["geometry"])
-            area_km2 = geom.area * 111 * 111
-
-            pop = props.get("population", np.nan)
-            enfants = props.get("enfants", np.nan)
-
-            data.append({
-                "health_area": props["health_area"],
-                "Pop_Totale": pop,
-                "Pop_Enfants_0_14": enfants,
-                "Densite_Pop": pop / area_km2 if area_km2 > 0 else np.nan
-            })
-
-        return pd.DataFrame(data)
-
-    except Exception as e:
-        st.warning(f"⚠️ WorldPop erreur : {e}")
-        return pd.DataFrame({
-            "health_area": _sa_gdf["health_area"].values,
-            "Pop_Totale": np.nan,
-            "Pop_Enfants_0_14": np.nan,
-            "Densite_Pop": np.nan
-        })
-
-
-
-
 
 # ============================================================
 # FILTRES
@@ -3133,6 +3120,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
