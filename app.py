@@ -2325,9 +2325,9 @@ with tab4:
                     else:
                         st.info("ℹ️ Aucune variable ne présente de corrélation forte avec les cas")
                 # 🧮 Coefficient d'ajustement population (par aire)
-                if "Pop_Totale" in df_model.columns and df_model["Pop_Totale"].notna().any():
-                    mean_cases_by_area = df_model.groupby("health_area")["cases"].mean()
-                    pop_by_area = df_model.groupby("health_area")["Pop_Totale"].first()
+                if "Pop_Totale" in df_corr.columns and df_corr["Pop_Totale"].notna().any():  # ✅
+                    mean_cases_by_area = df_corr.groupby("health_area")["cases"].mean()
+                    pop_by_area = df_corr.groupby("health_area")["Pop_Totale"].first()
                 
                     incidence_by_area = (mean_cases_by_area / pop_by_area * 10000).replace([np.inf, -np.inf], np.nan).fillna(0)
                 
@@ -2338,9 +2338,33 @@ with tab4:
                     else:
                         coef_ajustement = pd.Series(1.0, index=incidence_by_area.index)
                 
-                    df_model["coef_population"] = df_model["health_area"].map(coef_ajustement).fillna(1.0)
-                else:
-                    df_model["coef_population"] = 1.0
+                    df_corr["coef_population"] = df_corr["health_area"].map(coef_ajustement).fillna(1.0)  # ✅
+                    
+                    st.markdown("---")
+                    st.markdown("### 👥 Coefficient d'Ajustement Population")
+                    
+                    st.info(f"""
+                    ✅ **Coefficient calculé pour {len(coef_ajustement)} aires de santé**
+                    
+                    Ce coefficient ajuste les prédictions en fonction du risque démographique relatif de chaque aire.
+                    - Valeur > 1 : Zone à risque plus élevé que la moyenne
+                    - Valeur < 1 : Zone à risque plus faible que la moyenne
+                    """)
+    
+    # Afficher tableau des coefficients
+    coef_df = pd.DataFrame({
+        'Aire de santé': coef_ajustement.index,
+        'Coefficient': coef_ajustement.values,
+        'Interprétation': ['Risque élevé' if c > 1.2 else 'Risque faible' if c < 0.8 else 'Risque moyen' 
+                           for c in coef_ajustement.values]
+    }).sort_values('Coefficient', ascending=False)
+    
+    st.dataframe(coef_df, use_container_width=True)
+    
+else:
+    df_corr["coef_population"] = 1.0  # ✅
+    st.info("ℹ️ Coefficient population non calculé (données Pop_Totale manquantes)")
+
 
                 # Conseils données manquantes
                 if st.session_state.df_climate_aggregated is None:
@@ -3148,6 +3172,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
