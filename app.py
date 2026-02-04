@@ -1176,9 +1176,9 @@ with tab1:
             with colp1:
                 st.metric("Population totale", f"{int(df_pop['Pop_Totale'].sum()):,}".replace(",", " "))
             with colp2:
-                st.metric("Enfants 0–14 ans", f"{int(df_pop['PopEnfants014'].sum()):,}".replace(",", " "))
+                st.metric("Enfants 0–14 ans", f"{int(df_pop['Pop_Enfants_0_14'].sum()):,}".replace(",", " "))
             with colp3:
-                st.metric("Densité moyenne", f"{df_pop['DensitePop'].mean():.1f} hab/km²")
+                st.metric("Densité moyenne", f"{df_pop['Densite_Pop'].mean():.1f} hab/km²")
         # Section climat
         if st.session_state.df_climate_aggregated is not None:
             st.markdown("---")
@@ -3200,6 +3200,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
