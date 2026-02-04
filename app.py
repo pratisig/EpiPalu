@@ -1769,7 +1769,7 @@ with tab3:
                     if 'dfpopulation' in st.session_state and st.session_state.dfpopulation is not None and not st.session_state.dfpopulation.empty:  # ✅
 
                         gdf_env = gdf_env.merge(
-                            df_population[["health_area", "Pop_Totale", "Pop_Enfants_0_14", "Densite_Pop"]],
+                           st.session_state.dfpopulation[["health_area", "Pop_Totale", "Pop_Enfants_0_14", "Densite_Pop"]],
                             on="health_area",
                             how="left"
                         )
@@ -3172,6 +3172,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
