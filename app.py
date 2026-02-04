@@ -871,11 +871,22 @@ with st.sidebar.expander("📍 Données Obligatoires", expanded=True):
             # Téléchargement automatique WorldPop
             if 'dfpopulation' not in st.session_state:
                 with st.spinner("📥 Extraction population WorldPop..."):
+                    # Debug : vérifier use_gee
+                    if not use_gee:
+                        st.warning("⚠️ GEE non initialisé - WorldPop désactivé")
+                        st.info("💡 Vérifiez les secrets Streamlit (GEE_SERVICE_ACCOUNT)")
+                    
                     dfpopulation = worldpop_malaria_stats(gdf, use_gee)
                     
-                    if not dfpopulation.empty and dfpopulation['Pop_Totale'].notna().any():
+                    # Debug : afficher résultat
+                    st.info(f"📊 DataFrame retourné : {len(dfpopulation)} lignes")
+                    if not dfpopulation.empty:
+                        st.info(f"📊 Colonnes : {list(dfpopulation.columns)}")
+                        st.info(f"📊 Valeurs non-NaN : {dfpopulation['PopTotale'].notna().sum()}/{len(dfpopulation)}")
+                    
+                    if not dfpopulation.empty and dfpopulation['PopTotale'].notna().any():
                         gdf = gdf.merge(
-                            dfpopulation[['health_area', 'Pop_Totale', 'Pop_Enfants_0_14', 'Densite_Pop']], 
+                            dfpopulation[['health_area', 'PopTotale', 'PopEnfants014', 'DensitePop']], 
                             on='health_area', 
                             how='left'
                         )
@@ -883,10 +894,15 @@ with st.sidebar.expander("📍 Données Obligatoires", expanded=True):
                         st.session_state.gdf_health = gdf
                         st.session_state.dfpopulation = dfpopulation
                         
-                        total_pop = dfpopulation['Pop_Totale'].sum()
+                        total_pop = dfpopulation['PopTotale'].sum()
                         st.success(f"✅ Population : {int(total_pop):,} habitants")
                     else:
-                        st.warning("⚠️ WorldPop non disponible")
+                        st.warning("⚠️ WorldPop non disponible (DataFrame vide ou que des NaN)")
+                        if dfpopulation.empty:
+                            st.error("❌ DataFrame complètement vide")
+                        else:
+                            st.warning(f"⚠️ Toutes les valeurs sont NaN (vérifier GEE)")
+
             
             # Affichage stats
             if 'dfpopulation' in st.session_state and not st.session_state.dfpopulation.empty:
@@ -3120,6 +3136,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
