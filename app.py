@@ -257,40 +257,57 @@ use_gee = gee_ok  # ✅ Utiliser le résultat de init_gee()
 @st.cache_data
 def worldpop_malaria_stats(_sa_gdf, use_gee):
     """
-    Extrait population totale, enfants 0–14 ans et densité (WorldPop).
-    Retourne NaN si GEE indisponible.
+    Extrait population détaillée par sexe et âge (<35 ans) + totaux (WorldPop).
     """
 
     if not use_gee:
-        return pd.DataFrame({
-            "health_area": _sa_gdf["health_area"].values,
-            "Pop_Totale": np.nan,
-            "Pop_Enfants_0_14": np.nan,
-            "Densite_Pop": np.nan
-        })
+        # Fallback vide
+        cols = ['health_area', 'Pop_Totale', 'Pop_Enfants_0_14', 'Densite_Pop']
+        cols += [f'Pop_{sex}_{age}' for sex in ['M', 'F'] for age in ['0_4', '5_9', '10_14', '15_19', '20_24', '25_29', '30_34']]
+        return pd.DataFrame({c: np.nan for c in cols}, index=_sa_gdf.index)
 
     try:
         import ee
         import shapely.geometry
-
+        
         dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
         pop_img = dataset.mosaic()
 
-        # Bandes enfants
-        male_bands = ["M_0", "M_1", "M_5", "M_10"]
-        female_bands = ["F_0", "F_1", "F_5", "F_10"]
+        # ✅ TOUTES les bandes < 35 ans
+        male_bands = ['M_0', 'M_1', 'M_5', 'M_10', 'M_15', 'M_20', 'M_25', 'M_30']
+        female_bands = ['F_0', 'F_1', 'F_5', 'F_10', 'F_15', 'F_20', 'F_25', 'F_30']
 
-        enfants_img = (
-            pop_img.select(male_bands).reduce(ee.Reducer.sum())
-            .add(pop_img.select(female_bands).reduce(ee.Reducer.sum()))
-            .rename("enfants")
-        )
+        # Somme par tranche d'âge (groupage 5 ans)
+        def sum_groups(bands):
+            groups = {
+                '0_4': ee.Image(bands[0]).add(bands[1]),  # M_0 + M_1
+                '5_9': bands[2],
+                '10_14': bands[3],
+                '15_19': bands[4],
+                '20_24': bands[5],
+                '25_29': bands[6],
+                '30_34': bands[7]
+            }
+            return groups
 
-        total_img = pop_img.select(["population"])
+        male_groups = sum_groups(pop_img.select(male_bands))
+        female_groups = sum_groups(pop_img.select(female_bands))
 
-        pixel_area = ee.Image.pixelArea().divide(1e6)  # km²
+        # Total population
+        total_img = pop_img.select(['population'])
+        
+        # Pixel area (km²)
+        pixel_area = ee.Image.pixelArea().divide(1e6)
         total_count = total_img.multiply(pixel_area)
-        enfants_count = enfants_img.multiply(pixel_area)
+        
+        # Calculer population par groupe + totaux
+        images = [total_count]
+        band_names = ['population_totale']
+        
+        for age in ['0_4', '5_9', '10_14', '15_19', '20_24', '25_29', '30_34']:
+            images.append(male_groups[age].multiply(pixel_area))
+            images.append(female_groups[age].multiply(pixel_area))
+            band_names.extend([f'male_{age}', f'female_{age}'])
 
         features = []
         for _, row in _sa_gdf.iterrows():
@@ -299,7 +316,7 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
 
         fc = ee.FeatureCollection(features)
 
-        stats = ee.Image.cat([total_count, enfants_count]).reduceRegions(
+        stats = ee.Image.cat(images).reduceRegions(
             collection=fc,
             reducer=ee.Reducer.sum(),
             scale=100
@@ -309,17 +326,28 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
         for f in stats["features"]:
             props = f["properties"]
             geom = shapely.geometry.shape(f["geometry"])
-            area_km2 = geom.area * 111 * 111
-
-            pop = props.get("population", np.nan)
-            enfants = props.get("enfants", np.nan)
-
-            data.append({
+            area_km2 = geom.area * 111 * 111  # km² approx
+            
+            # Total population
+            pop_tot = props.get("population_totale", np.nan)
+            
+            # Somme enfants 0-14 (compatibilité)
+            enfants = sum(props.get(f"male_{age}", 0) + props.get(f"female_{age}", 0) 
+                         for age in ['0_4', '5_9', '10_14'])
+            
+            row_data = {
                 "health_area": props["health_area"],
-                "Pop_Totale": pop,
+                "Pop_Totale": pop_tot,
                 "Pop_Enfants_0_14": enfants,
-                "Densite_Pop": pop / area_km2 if area_km2 > 0 else np.nan
-            })
+                "Densite_Pop": pop_tot / area_km2 if area_km2 > 0 else np.nan
+            }
+            
+            # Ajouter toutes les tranches <35 ans
+            for sex in ['male', 'female']:
+                for age in ['0_4', '5_9', '10_14', '15_19', '20_24', '25_29', '30_34']:
+                    row_data[f"Pop_{sex.upper()}_{age}"] = props.get(f"{sex}_{age}", np.nan)
+            
+            data.append(row_data)
 
         return pd.DataFrame(data)
 
@@ -331,6 +359,7 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
             "Pop_Enfants_0_14": np.nan,
             "Densite_Pop": np.nan
         })
+
 # ============================================================
 # AGRÉGATION PAR AIRE ET SEMAINE
 # ============================================================
@@ -1207,7 +1236,63 @@ with tab1:
             
             with col4:
                 st.metric("📅 Semaines Climat", df_clim['week_'].nunique())
+            # Dans TAB1 - Pyramide détaillée <35 ans
+            if "dfpopulation" in st.session_state and not st.session_state.dfpopulation.empty:
+                df_pop = st.session_state.dfpopulation.copy()
+                if area_selected:
+                    df_pop = df_pop[df_pop["health_area"].isin(area_selected)]
             
+                # Agréger par tranches
+                age_groups = ['0_4', '5_9', '10_14', '15_19', '20_24', '25_29', '30_34']
+                
+                pop_data = {}
+                for group in age_groups:
+                    pop_data[group] = {
+                        'male': df_pop[f'Pop_M_{group}'].sum(),
+                        'female': df_pop[f'Pop_F_{group}'].sum()
+                    }
+            
+                fig_pyr = go.Figure()
+            
+                # Hommes (gauche)
+                fig_pyr.add_trace(go.Bar(
+                    y=[f"{int(g.split('_')[0])}-{int(g.split('_')[1])}" for g in age_groups],
+                    x=[-pop_data[g]['male'] for g in age_groups],
+                    name="Hommes",
+                    orientation="h",
+                    marker_color="#1f77b4",
+                    opacity=0.85,
+                    text=[f"{int(pop_data[g]['male']):,}" for g in age_groups],
+                    textposition="inside",
+                    insidetextanchor="end"
+                ))
+            
+                # Femmes (droite)
+                fig_pyr.add_trace(go.Bar(
+                    y=[f"{int(g.split('_')[0])}-{int(g.split('_')[1])}" for g in age_groups],
+                    x=[pop_data[g]['female'] for g in age_groups],
+                    name="Femmes",
+                    orientation="h",
+                    marker_color="#ff7f0e",
+                    opacity=0.85,
+                    text=[f"{int(pop_data[g]['female']):,}" for g in age_groups],
+                    textposition="inside"
+                ))
+            
+                total_under_35 = sum(pop_data[g]['male'] + pop_data[g]['female'] for g in age_groups)
+                total_all = df_pop["Pop_Totale"].sum()
+            
+                fig_pyr.update_layout(
+                    barmode="relative",
+                    title=f"Population <35 ans par sexe (WorldPop 100m)<br><sub>Total <35: {int(total_under_35):,} | Total: {int(total_all):,} | {total_under_35/total_all*100:.1f}%</sub>",
+                    xaxis={"title": "Population", "tickformat": ",", "zeroline": True},
+                    yaxis={"title": "Âge"},
+                    height=550,
+                    legend={"x": 0.02, "y": 1.02}
+                )
+            
+                st.plotly_chart(fig_pyr, use_container_width=True)
+
             # CORRECTION: Graphiques séparés
             st.markdown("### 📈 Évolution Hebdomadaire")
             
@@ -3200,6 +3285,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
