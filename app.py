@@ -1691,8 +1691,7 @@ with tab2:
                 <table style="width:100%;">
                     <tr><td><b>📊 Cas:</b></td><td>{safe_int(row['cases'])}</td></tr>
                     <tr><td><b>💀 Décès:</b></td><td>{safe_int(row['deaths'])}</td></tr>
-            """
-            
+        
             # ✅ POPULATION (avec .get() sécurisé)
             if 'Pop_Totale' in gdf_map.columns:
                 popup_html += f"<tr style='background:#F3E5F5;'><td><b>👥 Population:</b></td><td>{int(row.get('Pop_Totale', 0)):,}</td></tr>"
@@ -3297,6 +3296,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
