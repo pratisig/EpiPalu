@@ -14,3 +14,4 @@ Pillow
 requests
 earthengine-api
 shapely
+statsmodels
