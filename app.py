@@ -2350,20 +2350,19 @@ with tab4:
                     - Valeur > 1 : Zone à risque plus élevé que la moyenne
                     - Valeur < 1 : Zone à risque plus faible que la moyenne
                     """)
-    
-    # Afficher tableau des coefficients
-    coef_df = pd.DataFrame({
-        'Aire de santé': coef_ajustement.index,
-        'Coefficient': coef_ajustement.values,
-        'Interprétation': ['Risque élevé' if c > 1.2 else 'Risque faible' if c < 0.8 else 'Risque moyen' 
-                           for c in coef_ajustement.values]
-    }).sort_values('Coefficient', ascending=False)
-    
-    st.dataframe(coef_df, use_container_width=True)
-    
-else:
-    df_corr["coef_population"] = 1.0  # ✅
-    st.info("ℹ️ Coefficient population non calculé (données Pop_Totale manquantes)")
+                    # Afficher tableau des coefficients
+                    coef_df = pd.DataFrame({
+                        'Aire de santé': coef_ajustement.index,
+                        'Coefficient': coef_ajustement.values,
+                        'Interprétation': ['Risque élevé' if c > 1.2 else 'Risque faible' if c < 0.8 else 'Risque moyen' 
+                                           for c in coef_ajustement.values]
+                    }).sort_values('Coefficient', ascending=False)
+                    
+                    st.dataframe(coef_df, use_container_width=True)
+                    
+                else:
+                    df_corr["coef_population"] = 1.0  # ✅
+                    st.info("ℹ️ Coefficient population non calculé (données Pop_Totale manquantes)")    
 
 
                 # Conseils données manquantes
@@ -3172,6 +3171,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
