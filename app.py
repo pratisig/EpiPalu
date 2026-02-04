@@ -1165,7 +1165,20 @@ with tab1:
         with col5:
             cfr = (total_deaths / total_cases * 100) if total_cases > 0 else 0
             st.metric("Létalité", f"{cfr:.1f}%")
+         🔵 NOUVEAU : KPI POPULATION
+        if "dfpopulation" in st.session_state and not st.session_state.dfpopulation.empty:
+            df_pop = st.session_state.dfpopulation
+            # si filtres zone appliqués
+            if area_selected:
+                df_pop = df_pop[df_pop["health_area"].isin(area_selected)]
 
+            colp1, colp2, colp3 = st.columns(3)
+            with colp1:
+                st.metric("Population totale", f"{int(df_pop['PopTotale'].sum()):,}".replace(",", " "))
+            with colp2:
+                st.metric("Enfants 0–14 ans", f"{int(df_pop['PopEnfants014'].sum()):,}".replace(",", " "))
+            with colp3:
+                st.metric("Densité moyenne", f"{df_pop['DensitePop'].mean():.1f} hab/km²")
         # Section climat
         if st.session_state.df_climate_aggregated is not None:
             st.markdown("---")
@@ -1579,46 +1592,52 @@ with tab2:
         
         feature_group_labels.add_to(m)
         
-        # ✅ CORRECTION 4 : Grouper popups dans UN FeatureGroup
-        feature_group_popups = folium.FeatureGroup(name="Popups Détails", show=False)
-        
-        for idx, row in gdf_map.iterrows():
-            # Popup enrichi
-            popup_html = f"""
-            <div style="width:280px; font-family:Arial; font-size:12px;">
-                <h4 style="color:#2E86AB; margin:0;">{row['health_area']}</h4>
-                <hr style="margin:5px 0;">
-                <table style="width:100%;">
-                    <tr><td><b>📊 Cas:</b></td><td>{safe_int(row['cases'])}</td></tr>
-                    <tr><td><b>💀 Décès:</b></td><td>{safe_int(row['deaths'])}</td></tr>
-            """
+# ✅ CORRECTION 4 : Grouper popups dans UN FeatureGroup
+feature_group_popups = folium.FeatureGroup(name="Popups Détails", show=False)
+
+for idx, row in gdf_map.iterrows():
+    # Popup enrichi AVEC POPULATION + DENSITÉ
+    popup_html = f"""
+    <div style="width:320px; font-family:Arial; font-size:12px;">
+        <h4 style="color:#2E86AB; margin:0;">{row['health_area']}</h4>
+        <hr style="margin:5px 0;">
+        <table style="width:100%;">
+            <tr><td><b>📊 Cas:</b></td><td>{safe_int(row['cases'])}</td></tr>
+            <tr><td><b>💀 Décès:</b></td><td>{safe_int(row['deaths'])}</td></tr>
             
-            if 'temp_api' in row.index and not pd.isna(row['temp_api']):
-                popup_html += f"<tr style='background:#FFF3E0;'><td><b>🌡️ Température:</b></td><td>{safe_float(row['temp_api']):.1f}°C</td></tr>"
-            if 'precip_api' in row.index and not pd.isna(row['precip_api']):
-                popup_html += f"<tr style='background:#E1F5FE;'><td><b>🌧️ Précipitations:</b></td><td>{safe_float(row['precip_api']):.1f}mm</td></tr>"
-            if 'humidity_api' in row.index and not pd.isna(row['humidity_api']):
-                popup_html += f"<tr style='background:#E8F5E9;'><td><b>💧 Humidité:</b></td><td>{safe_float(row['humidity_api']):.1f}%</td></tr>"
+            <!-- 👥 NOUVEAU : POPULATION -->
+            <tr style='background:#F3E5F5;'><td><b>👥 Population:</b></td><td>{int(row.get('Pop_Totale', 0)):,}</td></tr>
+            <tr style='background:#E8F5E9;'><td><b>👶 Enfants 0–14:</b></td><td>{int(row.get('Pop_Enfants_0_14', 0)):,}</td></tr>
+            <tr style='background:#FFF3E0;'><td><b>📏 Densité:</b></td><td>{safe_float(row.get('Densite_Pop', 0)):.0f} hab/km²</td></tr>
             
-            if 'flood_mean' in row.index and not pd.isna(row['flood_mean']):
-                popup_html += f"<tr><td><b>🌊 Inondation:</b></td><td>{safe_float(row['flood_mean']):.2f}</td></tr>"
-            if 'elevation_mean' in row.index and not pd.isna(row['elevation_mean']):
-                popup_html += f"<tr><td><b>⛰️ Élévation:</b></td><td>{safe_float(row['elevation_mean']):.0f}m</td></tr>"
-            if 'dist_river' in row.index and not pd.isna(row['dist_river']):
-                popup_html += f"<tr><td><b>🏞️ Dist. rivière:</b></td><td>{safe_float(row['dist_river']):.2f}km</td></tr>"
-            
-            popup_html += "</table></div>"
-            
-            folium.GeoJson(
-                row['geometry'],
-                style_function=lambda x: {'fillOpacity': 0, 'color': 'transparent'},
-                popup=folium.Popup(popup_html, max_width=320)
-            ).add_to(feature_group_popups)
-        
-        feature_group_popups.add_to(m)
-        
-        LayerControl(collapsed=False).add_to(m)
-        st_folium(m, width=1200, height=700, key="main_map") 
+            <!-- Climat (couleurs existantes) -->
+    """
+    
+    if 'temp_api' in row.index and not pd.isna(row['temp_api']):
+        popup_html += f"<tr style='background:#FFF3E0;'><td><b>🌡️ Température:</b></td><td>{safe_float(row['temp_api']):.1f}°C</td></tr>"
+    if 'precip_api' in row.index and not pd.isna(row['precip_api']):
+        popup_html += f"<tr style='background:#E1F5FE;'><td><b>🌧️ Précipitations:</b></td><td>{safe_float(row['precip_api']):.1f}mm</td></tr>"
+    if 'humidity_api' in row.index and not pd.isna(row['humidity_api']):
+        popup_html += f"<tr style='background:#E8F5E9;'><td><b>💧 Humidité:</b></td><td>{safe_float(row['humidity_api']):.1f}%</td></tr>"
+    
+    # Environnement
+    if 'flood_mean' in row.index and not pd.isna(row['flood_mean']):
+        popup_html += f"<tr><td><b>🌊 Inondation:</b></td><td>{safe_float(row['flood_mean']):.2f}</td></tr>"
+    if 'elevation_mean' in row.index and not pd.isna(row['elevation_mean']):
+        popup_html += f"<tr><td><b>⛰️ Élévation:</b></td><td>{safe_float(row['elevation_mean']):.0f}m</td></tr>"
+    if 'dist_river' in row.index and not pd.isna(row['dist_river']):
+        popup_html += f"<tr><td><b>🏞️ Dist. rivière:</b></td><td>{safe_float(row['dist_river']):.2f}km</td></tr>"
+    
+    popup_html += "</table></div>"
+    
+    folium.GeoJson(
+        row['geometry'],
+        style_function=lambda x: {'fillOpacity': 0, 'color': 'transparent'},
+        popup=folium.Popup(popup_html, max_width=340)  # élargi pour population
+    ).add_to(feature_group_popups)
+
+feature_group_popups.add_to(m)
+
         
 # ============================================================
 # TAB 3 – MODÉLISATION SIMPLIFIÉE
@@ -3181,6 +3200,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
