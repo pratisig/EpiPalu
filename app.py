@@ -264,51 +264,50 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
         # Fallback vide
         cols = ['health_area', 'Pop_Totale', 'Pop_Enfants_0_14', 'Densite_Pop']
         cols += [f'Pop_{sex}_{age}' for sex in ['M', 'F'] for age in ['0_4', '5_9', '10_14', '15_19', '20_24', '25_29', '30_34']]
-        return pd.DataFrame({c: np.nan for c in cols}, index=_sa_gdf.index)
+        return pd.DataFrame({c: [np.nan]*len(_sa_gdf) for c in cols})
 
     try:
         import ee
         import shapely.geometry
         
-        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
+        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex_v1")
         pop_img = dataset.mosaic()
 
         # ✅ TOUTES les bandes < 35 ans
         male_bands = ['M_0', 'M_1', 'M_5', 'M_10', 'M_15', 'M_20', 'M_25', 'M_30']
         female_bands = ['F_0', 'F_1', 'F_5', 'F_10', 'F_15', 'F_20', 'F_25', 'F_30']
 
-        # Somme par tranche d'âge (groupage 5 ans)
-        def sum_groups(bands):
+        # ✅ CORRECTION : Fonction qui prend pop_img en paramètre
+        def sum_groups(img, bands):
             groups = {
-                '0_4': ee.Image(bands[0]).add(bands[1]),  # M_0 + M_1
-                '5_9': bands[2],
-                '10_14': bands[3],
-                '15_19': bands[4],
-                '20_24': bands[5],
-                '25_29': bands[6],
-                '30_34': bands[7]
+                '0_4': img.select(bands[0]).add(img.select(bands[1])),  # M_0 + M_1
+                '5_9': img.select(bands[2]),
+                '10_14': img.select(bands[3]),
+                '15_19': img.select(bands[4]),
+                '20_24': img.select(bands[5]),
+                '25_29': img.select(bands[6]),
+                '30_34': img.select(bands[7])
             }
             return groups
 
-        male_groups = sum_groups(pop_img.select(male_bands))
-        female_groups = sum_groups(pop_img.select(female_bands))
+        male_groups = sum_groups(pop_img, male_bands)
+        female_groups = sum_groups(pop_img, female_bands)
 
         # Total population
-        total_img = pop_img.select(['population'])
+        total_img = pop_img.select('population')
         
         # Pixel area (km²)
         pixel_area = ee.Image.pixelArea().divide(1e6)
         total_count = total_img.multiply(pixel_area)
         
-        # Calculer population par groupe + totaux
+        # ✅ Calculer population par groupe + totaux
         images = [total_count]
-        band_names = ['population_totale']
         
         for age in ['0_4', '5_9', '10_14', '15_19', '20_24', '25_29', '30_34']:
-            images.append(male_groups[age].multiply(pixel_area))
-            images.append(female_groups[age].multiply(pixel_area))
-            band_names.extend([f'male_{age}', f'female_{age}'])
+            images.append(male_groups[age].multiply(pixel_area).rename(f'male_{age}'))
+            images.append(female_groups[age].multiply(pixel_area).rename(f'female_{age}'))
 
+        # ✅ Créer features GEE
         features = []
         for _, row in _sa_gdf.iterrows():
             geom = ee.Geometry(row.geometry.__geo_interface__)
@@ -316,7 +315,10 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
 
         fc = ee.FeatureCollection(features)
 
-        stats = ee.Image.cat(images).reduceRegions(
+        # ✅ Combiner toutes les images et réduire
+        combined = ee.Image.cat(images)
+        
+        stats = combined.reduceRegions(
             collection=fc,
             reducer=ee.Reducer.sum(),
             scale=100
@@ -329,17 +331,19 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
             area_km2 = geom.area * 111 * 111  # km² approx
             
             # Total population
-            pop_tot = props.get("population_totale", np.nan)
+            pop_tot = props.get("population", np.nan)
             
             # Somme enfants 0-14 (compatibilité)
-            enfants = sum(props.get(f"male_{age}", 0) + props.get(f"female_{age}", 0) 
-                         for age in ['0_4', '5_9', '10_14'])
+            enfants = sum([
+                props.get(f"male_{age}", 0) + props.get(f"female_{age}", 0) 
+                for age in ['0_4', '5_9', '10_14']
+            ])
             
             row_data = {
                 "health_area": props["health_area"],
                 "Pop_Totale": pop_tot,
                 "Pop_Enfants_0_14": enfants,
-                "Densite_Pop": pop_tot / area_km2 if area_km2 > 0 else np.nan
+                "Densite_Pop": pop_tot / area_km2 if area_km2 > 0 and pop_tot > 0 else np.nan
             }
             
             # Ajouter toutes les tranches <35 ans
@@ -349,16 +353,31 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
             
             data.append(row_data)
 
-        return pd.DataFrame(data)
+        df_result = pd.DataFrame(data)
+        
+        # ✅ Vérification et feedback
+        valid_count = df_result['Pop_Totale'].notna().sum()
+        if valid_count > 0:
+            st.success(f"✅ WorldPop : {valid_count}/{len(df_result)} aires extraites")
+            total = df_result['Pop_Totale'].sum()
+            st.info(f"📊 Population totale : {int(total):,} habitants")
+        else:
+            st.warning("⚠️ WorldPop : aucune donnée valide extraite")
+        
+        return df_result
 
     except Exception as e:
-        st.warning(f"⚠️ WorldPop erreur : {e}")
+        st.error(f"❌ WorldPop erreur : {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
+        
         return pd.DataFrame({
             "health_area": _sa_gdf["health_area"].values,
             "Pop_Totale": np.nan,
             "Pop_Enfants_0_14": np.nan,
             "Densite_Pop": np.nan
         })
+
 
 # ============================================================
 # AGRÉGATION PAR AIRE ET SEMAINE
@@ -3298,6 +3317,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
