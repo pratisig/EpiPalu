@@ -270,14 +270,15 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
         import ee
         import shapely.geometry
         
-        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex_v1")
+        # ✅ CORRECTION : Utiliser le bon nom de dataset
+        dataset = ee.ImageCollection("WorldPop/GP/100m/pop_age_sex")
         pop_img = dataset.mosaic()
 
         # ✅ TOUTES les bandes < 35 ans
         male_bands = ['M_0', 'M_1', 'M_5', 'M_10', 'M_15', 'M_20', 'M_25', 'M_30']
         female_bands = ['F_0', 'F_1', 'F_5', 'F_10', 'F_15', 'F_20', 'F_25', 'F_30']
 
-        # ✅ CORRECTION : Fonction qui prend pop_img en paramètre
+        # ✅ Fonction qui prend pop_img en paramètre
         def sum_groups(img, bands):
             groups = {
                 '0_4': img.select(bands[0]).add(img.select(bands[1])),  # M_0 + M_1
@@ -300,14 +301,14 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
         pixel_area = ee.Image.pixelArea().divide(1e6)
         total_count = total_img.multiply(pixel_area)
         
-        # ✅ Calculer population par groupe + totaux
+        # Calculer population par groupe + totaux
         images = [total_count]
         
         for age in ['0_4', '5_9', '10_14', '15_19', '20_24', '25_29', '30_34']:
             images.append(male_groups[age].multiply(pixel_area).rename(f'male_{age}'))
             images.append(female_groups[age].multiply(pixel_area).rename(f'female_{age}'))
 
-        # ✅ Créer features GEE
+        # Créer features GEE
         features = []
         for _, row in _sa_gdf.iterrows():
             geom = ee.Geometry(row.geometry.__geo_interface__)
@@ -315,7 +316,7 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
 
         fc = ee.FeatureCollection(features)
 
-        # ✅ Combiner toutes les images et réduire
+        # Combiner toutes les images et réduire
         combined = ee.Image.cat(images)
         
         stats = combined.reduceRegions(
@@ -355,7 +356,7 @@ def worldpop_malaria_stats(_sa_gdf, use_gee):
 
         df_result = pd.DataFrame(data)
         
-        # ✅ Vérification et feedback
+        # Vérification et feedback
         valid_count = df_result['Pop_Totale'].notna().sum()
         if valid_count > 0:
             st.success(f"✅ WorldPop : {valid_count}/{len(df_result)} aires extraites")
@@ -3317,6 +3318,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
