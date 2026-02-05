@@ -1748,7 +1748,7 @@ with tab2:
             if 'Pop_Enfants_0_14' in gdf_map.columns and pd.notna(row.get('Pop_Enfants_0_14')):
                 popup_html += f"<tr style='background:#E8F5E9;'><td><b>👶 Enfants 0–14:</b></td><td>{int(row['Pop_Enfants_0_14']):,}</td></tr>"
             if 'Densite_Pop' in gdf_map.columns and pd.notna(row.get('Densite_Pop')):
-                popup_html += f"<tr style='background:#FFF3E0;'><td><b>📏 Densité:</b></td><td>{safe_float(row['Densite_Pop']):.0f} hab/km²</td></tr>"
+                popup_html += f"<tr style='background:#FFF3E0;'><td><b>📏 Densité:</b></td><td>{safe_float(row['Densite_Pop']):.2f} hab/km²</td></tr>"
             
             # Climat (si disponible)
             if 'temp_api' in gdf_map.columns and pd.notna(row.get('temp_api')):
@@ -3350,6 +3350,7 @@ st.markdown("""
     <p>Version 1.0 | Développé avec | Python • Streamlit • GeoPandas • Scikit-learn par Youssoupha MBODJI</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
